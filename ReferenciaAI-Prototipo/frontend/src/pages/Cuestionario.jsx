@@ -58,8 +58,8 @@ export default function Cuestionario() {
   return (
     <div className="publico">
       <div className="encabezado">
-        <div className="logo">Referencia <span>AI</span></div>
-        <div style={{ fontSize: 12, color: 'var(--gris)' }}>EstrategIA Tecnológica · Enlace seguro</div>
+        <div className="logo">Reference <span>Hub</span></div>
+        <div style={{ fontSize: 12, color: 'var(--gris)' }}>Reference Hub · Secure link</div>
       </div>
 
       {error && <div className="error-msg">{error}</div>}

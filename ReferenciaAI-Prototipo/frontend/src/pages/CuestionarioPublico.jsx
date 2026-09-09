@@ -109,7 +109,7 @@ export default function CuestionarioPublico() {
       <header className="bg-navy p-5 shadow-md flex items-center justify-between sticky top-0 z-10">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-accent-orange rounded-full" aria-hidden="true"></div>
-          <span className="font-bold text-off-white text-lg tracking-wide">Referencia<span className="text-accent-orange uppercase">AI</span></span>
+          <span className="font-bold text-off-white text-lg tracking-wide">Reference<span className="text-accent-orange">Hub</span></span>
         </div>
         <div className="text-blue-gray text-sm font-bold" aria-live="polite">
           Paso {paso} de 3

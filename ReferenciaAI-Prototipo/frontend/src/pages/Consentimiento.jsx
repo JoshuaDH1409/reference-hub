@@ -18,7 +18,7 @@ export default function Consentimiento() {
         <div className="flex items-center gap-2 mb-8 justify-center">
           <div className="w-8 h-8 bg-accent-orange rounded-full flex-shrink-0"></div>
           <div className="flex flex-col leading-tight">
-            <span className="font-bold text-xl text-navy tracking-wide">Referencia<span className="uppercase text-accent-orange">AI</span></span>
+            <span className="font-bold text-xl text-navy tracking-wide">Reference<span className="text-accent-orange">Hub</span></span>
           </div>
         </div>
 
@@ -26,7 +26,7 @@ export default function Consentimiento() {
         
         <div className="text-charcoal text-sm mb-6 leading-relaxed bg-off-white p-4 rounded-lg border border-blue-gray-20 overflow-y-auto max-h-60">
           <p className="mb-3">
-            Al utilizar <strong>Referencia AI</strong>, usted acepta que la información proporcionada será tratada con estricta confidencialidad y utilizada exclusivamente para fines de evaluación profesional y procesos de reclutamiento.
+            Al utilizar <strong>Reference Hub</strong>, usted acepta que la información proporcionada será tratada con estricta confidencialidad y utilizada exclusivamente para fines de evaluación profesional y procesos de reclutamiento.
           </p>
           <p className="mb-3">
             Sus datos personales y respuestas están protegidos bajo los más altos estándares de seguridad y anonimato, asegurando que su identidad sea resguardada de acuerdo a las leyes aplicables de protección de datos.
@@ -65,7 +65,7 @@ export default function Consentimiento() {
       </div>
       
       <div className="mt-8 text-xs text-blue-gray text-center">
-        EstrategIA Tecnológica &copy; {new Date().getFullYear()}
+        Reference Hub &copy; {new Date().getFullYear()}
       </div>
     </div>
   );
