@@ -1,69 +1,53 @@
 # Reference Hub
 
-Portfolio prototype of an **automated employment-reference management platform**: invite referrers, collect structured feedback, score candidates, and generate printable reports.
-
-Formerly developed as *Referencia AI*; rebranded for portfolio presentation as **Reference Hub**.
+Prototipo para gestionar referencias laborales: invitas referentes, recolectas respuestas, puntúas candidatos y generas reportes.
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Frontend | **React** + **Vite** + **Tailwind CSS** |
-| Backend | **.NET 8** (ASP.NET Core minimal API) + **EF Core** + **SQLite** |
-| Extras | Charts (Recharts), PDF reports (QuestPDF), simulated email inbox |
+- **Frontend:** React + Vite + Tailwind
+- **Backend:** .NET 8 (minimal API) + EF Core + SQLite
+- **Extras:** Recharts, QuestPDF, bandeja de correo simulada
 
-## Requirements
+## Requisitos
 
-1. **.NET 8 SDK** — https://dotnet.microsoft.com/download/dotnet/8.0
-2. **Node.js 18+** — https://nodejs.org
+- .NET 8 SDK
+- Node.js 18+
 
-Verify: `dotnet --version` and `node --version`.
+## Cómo correrlo
 
-## How to run
+Dos terminales. Si clonaste el repo, el código vive en `ReferenciaAI-Prototipo/`.
 
-Open **two terminals**:
+**API**
 
-**Terminal 1 — Backend (API)**
 ```bash
 cd ReferenciaAI-Prototipo/backend
 dotnet run
 ```
-API at `http://localhost:5155`. On first start it creates SQLite (`referencia_ai.db`) with demo data.
 
-**Terminal 2 — Frontend**
+Queda en `http://localhost:5155`. Al arrancar crea `referencia_ai.db` con datos de demo.
+
+**Frontend**
+
 ```bash
 cd ReferenciaAI-Prototipo/frontend
 npm install
 npm run dev
 ```
-Open `http://localhost:5173`.
 
-> Paths assume you cloned the repo root. If your working directory is already `ReferenciaAI-Prototipo/`, use `cd backend` / `cd frontend`.
+Abre `http://localhost:5173`.
 
-## Demo walkthrough
+## Qué puedes probar
 
-1. **Dashboard** — live stats, candidate progress, risk traffic-light scores.
-2. Open a completed candidate expediente — competency scores, risk, comment summaries, timeline.
-3. **Register candidate** — create a candidate with referrers; invitations are queued automatically.
-4. **Messages** — demo mailbox of emails that would be sent (SMTP optional in production).
-5. **Copy link** on a pending reference → public questionnaire as the referrer sees it.
-6. **Reports** — consolidated printable / PDF report.
+- Dashboard con avance y semáforo de riesgo
+- Expediente de un candidato terminado
+- Alta de candidato + invitaciones a referentes
+- Bandeja de correos de demo (SMTP opcional)
+- Cuestionario público (copia el link de una referencia pendiente)
+- Reportes / PDF
 
-## Project structure
+## Limitaciones
 
-```
-ReferenciaAI-Prototipo/
-  backend/     Program.cs, models, EF Core, scoring & email services
-  frontend/    Vite React app (pages, dashboard charts, Tailwind theme)
-```
-
-## Notes
-
-- Emails can be **simulated** (stored in DB / demo inbox). Configure SMTP via `appsettings.json` / environment variables — **do not commit real passwords**.
-- Reminders are manual in the prototype; production would use a background job.
-- Auth UI is present for demo navigation; full multi-tenant auth is out of scope for this portfolio build.
-- Reset demo data: stop the API and delete `backend/referencia_ai.db`.
-
-## License / portfolio
-
-Built as a functional prototype for portfolio showcase. Branding: **Reference Hub**.
+- El correo puede quedar solo simulado en BD; no subas contraseñas reales a `appsettings.json`
+- Los recordatorios son manuales en este prototipo
+- Auth multi-tenant completa está fuera de alcance
+- Para resetear la demo: para la API y borra `backend/referencia_ai.db`
