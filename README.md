@@ -1,6 +1,7 @@
 # Reference Hub
 
 **Demo:** https://joshuadh1409.github.io/reference-hub/
+> En la demo pública el front usa **datos de ejemplo** (sin backend).
 
 Prototipo para gestionar referencias laborales: invitas referentes, recolectas respuestas, puntúas candidatos y generas reportes.
 
