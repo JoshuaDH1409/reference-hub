@@ -128,7 +128,7 @@ Sus respuestas serán tratadas de manera confidencial y utilizadas exclusivament
 
 Gracias por su tiempo.
 
-Referencia AI — EstrategIA Tecnológica"
+Reference Hub"
         };
     }
 
@@ -153,7 +153,7 @@ Puede hacerlo en el siguiente enlace seguro:
 
 Gracias por su apoyo.
 
-Referencia AI — EstrategIA Tecnológica"
+Reference Hub"
         };
     }
 }

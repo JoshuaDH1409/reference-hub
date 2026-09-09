@@ -44,10 +44,10 @@ export default function Reporte() {
 
         <div style={{ textAlign: 'center', marginBottom: 10 }}>
           <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--azul-osc)' }}>
-            Referencia <span style={{ color: 'var(--acento)' }}>AI</span>
+            Reference <span style={{ color: 'var(--acento)' }}>Hub</span>
           </div>
           <div style={{ fontSize: 12, color: 'var(--gris)' }}>
-            EstrategIA Tecnológica · Reporte de referencias laborales · {formatoDia(new Date().toISOString())}
+            Reference Hub · Employment reference report · {formatoDia(new Date().toISOString())}
           </div>
         </div>
 
@@ -130,7 +130,7 @@ export default function Reporte() {
         ))}
 
         <p style={{ fontSize: 11, color: 'var(--gris)', marginTop: 30 }}>
-          Este reporte fue generado automáticamente por la plataforma Referencia AI. La información proviene
+          Este reporte fue generado automáticamente por la plataforma Reference Hub. La información proviene
           directamente de las respuestas de los referentes y se trata de manera confidencial, exclusivamente
           para fines del proceso de evaluación.
         </p>

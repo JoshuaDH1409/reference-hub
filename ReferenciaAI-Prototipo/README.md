@@ -1,69 +1,69 @@
-# Referencia AI — Prototipo funcional
+# Reference Hub
 
-Sistema de gestión de referencias laborales automatizadas. **EstrategIA Tecnológica**.
+Portfolio prototype of an **automated employment-reference management platform**: invite referrers, collect structured feedback, score candidates, and generate printable reports.
 
-Tecnología: **.NET 8 (ASP.NET Core minimal API + EF Core + SQLite)** y **React (Vite)**.
+Formerly developed as *Referencia AI*; rebranded for portfolio presentation as **Reference Hub**.
 
-## Requisitos
+## Stack
 
-1. **.NET 8 SDK** — descargar de https://dotnet.microsoft.com/download/dotnet/8.0
-2. **Node.js 18+** — descargar de https://nodejs.org
+| Layer | Tech |
+|-------|------|
+| Frontend | **React** + **Vite** + **Tailwind CSS** |
+| Backend | **.NET 8** (ASP.NET Core minimal API) + **EF Core** + **SQLite** |
+| Extras | Charts (Recharts), PDF reports (QuestPDF), simulated email inbox |
 
-Verifica en Terminal: `dotnet --version` y `node --version`.
+## Requirements
 
-## Cómo ejecutar
+1. **.NET 8 SDK** — https://dotnet.microsoft.com/download/dotnet/8.0
+2. **Node.js 18+** — https://nodejs.org
 
-Abre **dos ventanas de Terminal**:
+Verify: `dotnet --version` and `node --version`.
 
-**Terminal 1 — Backend (API):**
+## How to run
+
+Open **two terminals**:
+
+**Terminal 1 — Backend (API)**
 ```bash
-cd backend
+cd ReferenciaAI-Prototipo/backend
 dotnet run
 ```
-La API queda en `http://localhost:5155`. Al primer arranque crea la base SQLite
-(`referencia_ai.db`) con **datos de demostración** (3 candidatos en distintas etapas).
+API at `http://localhost:5155`. On first start it creates SQLite (`referencia_ai.db`) with demo data.
 
-**Terminal 2 — Frontend (web):**
+**Terminal 2 — Frontend**
 ```bash
-cd frontend
+cd ReferenciaAI-Prototipo/frontend
 npm install
 npm run dev
 ```
-Abre `http://localhost:5173` en tu navegador.
+Open `http://localhost:5173`.
 
-## Recorrido sugerido para la demo
+> Paths assume you cloned the repo root. If your working directory is already `ReferenciaAI-Prototipo/`, use `cd backend` / `cd frontend`.
 
-1. **Dashboard** — estadísticas en tiempo real, avance por candidato, score y semáforo.
-2. Entra al expediente de **María Fernanda López** (proceso completado): score automático
-   por competencia, semáforo de riesgo, comentarios inteligentes (fortalezas / áreas de
-   oportunidad resumidas) y línea de tiempo completa.
-3. **Registrar candidato** — da de alta un candidato con sus referencias; la plataforma
-   "envía" las invitaciones automáticamente.
-4. **Correos enviados** — bandeja de demostración con los correos que se enviarían
-   (en producción se conecta un servidor SMTP real). Cada correo incluye el enlace
-   seguro del cuestionario.
-5. En el expediente, usa **"Copiar enlace"** en una referencia pendiente y ábrelo en
-   otra pestaña: verás el **cuestionario público** tal como lo ve el referente.
-   Respóndelo y observa cómo se actualizan score, avance, timeline y estatus.
-6. **Ver reporte** — reporte consolidado imprimible (botón *Imprimir / Guardar PDF*).
+## Demo walkthrough
 
-## Estructura
+1. **Dashboard** — live stats, candidate progress, risk traffic-light scores.
+2. Open a completed candidate expediente — competency scores, risk, comment summaries, timeline.
+3. **Register candidate** — create a candidate with referrers; invitations are queued automatically.
+4. **Messages** — demo mailbox of emails that would be sent (SMTP optional in production).
+5. **Copy link** on a pending reference → public questionnaire as the referrer sees it.
+6. **Reports** — consolidated printable / PDF report.
+
+## Project structure
 
 ```
-backend/
-  Program.cs      → endpoints de la API
-  Modelos.cs      → entidades y DTOs
-  BaseDatos.cs    → DbContext + datos de demostración
-  Servicios.cs    → score, semáforo, resumen de comentarios, correos
-frontend/
-  src/pages/      → Dashboard, NuevoCandidato, Expediente, Cuestionario, Reporte, Correos
+ReferenciaAI-Prototipo/
+  backend/     Program.cs, models, EF Core, scoring & email services
+  frontend/    Vite React app (pages, dashboard charts, Tailwind theme)
 ```
 
-## Notas del prototipo
+## Notes
 
-- Los correos son **simulados** (se guardan en la base y se muestran en "Correos enviados").
-  Para producción: integrar SMTP/SendGrid en `Servicios.cs`.
-- Los recordatorios se envían manualmente con un botón; en producción serían un
-  trabajo programado (background service) según la configuración del cliente.
-- Sin autenticación de usuarios (fuera de alcance del prototipo).
-- Para reiniciar los datos de demo: detén la API y borra `backend/referencia_ai.db`.
+- Emails can be **simulated** (stored in DB / demo inbox). Configure SMTP via `appsettings.json` / environment variables — **do not commit real passwords**.
+- Reminders are manual in the prototype; production would use a background job.
+- Auth UI is present for demo navigation; full multi-tenant auth is out of scope for this portfolio build.
+- Reset demo data: stop the API and delete `backend/referencia_ai.db`.
+
+## License / portfolio
+
+Built as a functional prototype for portfolio showcase. Branding: **Reference Hub**.
