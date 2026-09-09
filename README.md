@@ -2,6 +2,14 @@
 
 Prototipo para gestionar referencias laborales: invitas referentes, recolectas respuestas, puntúas candidatos y generas reportes.
 
+<!-- screenshots -->
+## Vista
+
+![Reference Hub](docs/screenshots/ui.png)
+
+> La app vive en `ReferenciaAI-Prototipo/frontend` + `backend`.
+
+
 ## Stack
 
 - **Frontend:** React + Vite + Tailwind
