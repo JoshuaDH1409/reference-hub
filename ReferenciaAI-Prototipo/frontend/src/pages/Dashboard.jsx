@@ -31,7 +31,7 @@ export default function Dashboard() {
   const navegar = useNavigate();
   const { data: datos, isLoading, isError, error } = useDashboardData();
 
-  if (isError) return <div className="error-msg">No se pudo conectar con la API: {error?.message}. Verifica que el backend esté corriendo.</div>;
+  if (isError) return <div className="error-msg">No se pudieron cargar los datos.</div>;
   if (isLoading || !datos) return (
     <div className="flex justify-center items-center h-64">
        <div className="animate-pulse flex flex-col items-center">
