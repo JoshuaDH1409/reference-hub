@@ -1,4 +1,4 @@
-const BASE = '/api'
+const BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api'
 
 async function pedir(ruta, opciones) {
   const res = await fetch(`${BASE}${ruta}`, opciones)
@@ -17,6 +17,11 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto),
+    }),
+  importarCandidatosExcel: (formData) =>
+    pedir('/v1/candidatos/importar', {
+      method: 'POST',
+      body: formData,
     }),
   enviarRecordatorio: (idReferencia) =>
     pedir(`/referencias/${idReferencia}/recordatorio`, { method: 'POST' }),

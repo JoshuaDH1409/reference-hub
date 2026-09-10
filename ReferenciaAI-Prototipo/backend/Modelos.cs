@@ -2,6 +2,15 @@ namespace ReferenciaAI.Api;
 
 // ===================== Entidades =====================
 
+public class Pregunta
+{
+    public int Id { get; set; }
+    public string Area { get; set; } = "";
+    public string TextoPregunta { get; set; } = "";
+    public string Tipo { get; set; } = "Score1To10";
+    public bool Activa { get; set; } = true;
+}
+
 public class Candidato
 {
     public int Id { get; set; }
@@ -91,6 +100,8 @@ public class CorreoSimulado
 }
 
 // ===================== DTOs =====================
+
+public record PreguntaDto(int Id, string Area, string TextoPregunta, string Tipo, bool Activa);
 
 public record RegistroDto(string Nombre, string Email, string Password);
 public record LoginDto(string Email, string Password);

@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "",
+    "appService.deploySubpath": "ReferenciaAI-Prototipo\\backend\\bin\\Release\\net8.0\\publish"
+}

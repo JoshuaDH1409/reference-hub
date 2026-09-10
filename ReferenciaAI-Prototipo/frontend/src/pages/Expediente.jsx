@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { api, formatoFecha } from '../api.js';
 
 const candidatoDemo = {
@@ -39,7 +39,6 @@ export default function Expediente() {
   const { id } = useParams();
   const [c, setC] = useState(null);
   const [error, setError] = useState('');
-  const [mensaje, setMensaje] = useState('');
 
   const cargar = useCallback(() => {
     api.candidato(id).then(setC).catch((e) => {
@@ -50,211 +49,294 @@ export default function Expediente() {
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  if (error) return <div className="bg-red-50 text-red-600 p-4 rounded-lg">{error}</div>;
-  if (!c) return <p className="text-blue-gray font-bold">Cargando expediente...</p>;
+  if (error) return <div className="error-msg">{error}</div>;
+  if (!c) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-pulse flex flex-col items-center">
+        <div className="w-12 h-12 bg-blue-gray-20 rounded-full mb-4"></div>
+        <p className="bold-text text-blue-gray">Cargando expediente…</p>
+      </div>
+    </div>
+  );
 
   const score = c.score;
 
-  // Semantic color for Risk Semaphore
-  const semaforoColors = {
-    verde: "bg-green-500 shadow-green-200",
-    amarillo: "bg-orange-500 shadow-orange-200",
-    rojo: "bg-red-500 shadow-red-200",
-    gris: "bg-gray-400"
+  const downloadPdf = async () => {
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${baseUrl}/api/candidatos/${c.id}/reporte/pdf`);
+      if (!res.ok) throw new Error('Error al generar PDF');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Reporte_${c.nombre.replace(/ /g, '_')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error(err);
+      alert('Error al descargar el reporte.');
+    }
   };
 
   return (
-    <div className="max-w-6xl">
-      {/* Cabecera */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-navy mb-2">{c.nombre}</h1>
-          <div className="flex items-center gap-3 text-sm text-blue-gray">
-            <span className="font-bold text-charcoal">{c.puesto}</span>
-            <span>&bull;</span>
-            <span>Registrado el {formatoFecha(c.fechaRegistro)}</span>
-            <span>&bull;</span>
-            <span className={`px-2 py-1 rounded-full text-xs font-bold border ${c.estatus === 'Completado' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-              {c.estatus}
-            </span>
+    <div className="theme-content p-0 lg:p-8">
+      {/* Hero Banner en branding Navy */}
+      <div className="bg-[var(--navy)] rounded-3xl p-8 mb-8 relative overflow-hidden shadow-[var(--shadow)]">
+        {/* Background elements for depth */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--accent-orange)] opacity-10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[var(--blue-gray)] opacity-10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+        
+        <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="text-white">
+            <div 
+              className="text-[var(--blue-gray)] text-sm font-bold tracking-widest uppercase mb-4 cursor-pointer hover:text-white transition-colors inline-flex items-center gap-2" 
+              onClick={() => window.history.back()}
+            >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
+              Expediente del Candidato
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white tracking-tight">{c.nombre}</h1>
+            
+            <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-[#EAEBE7]/80">
+              <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+                <span className="material-symbols-outlined text-base text-[var(--accent-orange)]">work</span>
+                {c.puesto}
+              </span>
+              <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-full border border-white/10">
+                <span className="material-symbols-outlined text-base">calendar_today</span>
+                {formatoFecha(c.fechaRegistro)}
+              </span>
+              <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-bold border ${c.estatus === 'Completado' ? 'bg-[#10B981]/20 text-[#10B981] border-[#10B981]/30' : 'bg-[#F66B40]/20 text-[#F66B40] border-[#F66B40]/30'}`}>
+                {c.estatus}
+              </span>
+            </div>
           </div>
+          
+          <button 
+            onClick={downloadPdf}
+            className="bg-gradient-to-r from-[var(--accent-orange)] to-[#FEAA18] text-white border-0 py-3 px-6 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined">download</span>
+            Descargar Reporte PDF
+          </button>
         </div>
-        <button 
-          onClick={async () => {
-            try {
-              const res = await fetch(`http://localhost:5155/api/candidatos/${c.id}/reporte/pdf`);
-              if (!res.ok) throw new Error('Error al generar PDF');
-              const blob = await res.blob();
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `Reporte_${c.nombre.replace(/ /g, '_')}.pdf`;
-              document.body.appendChild(a);
-              a.click();
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            } catch (err) {
-              console.error(err);
-              alert('Error al descargar el reporte.');
-            }
-          }}
-          className="bg-white border border-blue-gray-40 text-navy font-bold py-2 px-4 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-        >
-          <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
-          Descargar PDF
-        </button>
       </div>
 
-      {mensaje && <div className="bg-green-50 text-green-700 border border-green-200 p-4 rounded-lg mb-6">{mensaje}</div>}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Columna Izquierda (Insights Principales) */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          
+          {/* Card Score */}
+          <article className="theme-card p-8">
+            <h2 className="text-[var(--navy)] text-lg font-bold uppercase tracking-wider mb-8 flex items-center gap-2">
+               <span className="material-symbols-outlined text-[var(--accent-orange)]">insights</span>
+               Score de Evaluación
+            </h2>
+            
+            {score.disponible ? (
+              <>
+                <div className="flex items-end justify-center gap-2 mb-10 pb-10 border-b border-[var(--border)]">
+                  <span className="text-7xl font-bold text-[var(--navy)] leading-none tracking-tighter">{score.general}</span>
+                  <span className="text-2xl font-bold text-[var(--blue-gray)] mb-2">/ 10</span>
+                </div>
+                
+                <div className="space-y-6">
+                  {score.competencias.map((comp) => (
+                    <div key={comp.nombre}>
+                      <div className="flex justify-between text-sm font-bold text-[var(--charcoal)] mb-2">
+                        <span>{comp.nombre}</span>
+                        <span>{comp.valor}</span>
+                      </div>
+                      <div className="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+                        <div className="h-full bg-[var(--navy)] rounded-full" style={{ width: `${comp.valor * 10}%` }}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-[var(--blue-gray)] text-sm py-12 font-medium bg-[var(--off-white)] rounded-2xl border border-[var(--border)]">
+                Aún no hay suficientes datos para calcular el score.
+              </div>
+            )}
+          </article>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-start">
-        {/* Score Card */}
-        <div className="bg-white border border-blue-gray-20 rounded-2xl p-6 shadow-sm flex flex-col">
-          <span className="font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-gray">speed</span>
-            Score General
-          </span>
-          {score.disponible ? (
-            <div className="flex items-baseline gap-2 mb-6">
-              <span className="text-5xl font-bold text-navy leading-none">{score.general}</span>
-              <span className="text-blue-gray text-lg font-bold">/ 10</span>
+          {/* Card Semáforo */}
+          <article className="theme-card p-8">
+            <h2 className="text-[var(--navy)] text-lg font-bold uppercase tracking-wider mb-6 flex items-center gap-2">
+               <span className="material-symbols-outlined text-[var(--accent-orange)]">security</span>
+               Nivel de Riesgo
+            </h2>
+            
+            <div className="flex flex-col items-center justify-center p-6 bg-[var(--off-white)] border border-[var(--border)] rounded-3xl">
+               <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 relative">
+                  <div className={`absolute inset-0 rounded-full opacity-20 blur-md ${score.semaforo === 'verde' ? 'bg-[#10B981]' : score.semaforo === 'rojo' ? 'bg-[#EF4444]' : score.semaforo === 'amarillo' ? 'bg-[#F59E0B]' : 'bg-gray-400'}`}></div>
+                  <div className={`w-14 h-14 rounded-full border-4 border-white shadow-lg z-10 ${score.semaforo === 'verde' ? 'bg-[#10B981]' : score.semaforo === 'rojo' ? 'bg-[#EF4444]' : score.semaforo === 'amarillo' ? 'bg-[#F59E0B]' : 'bg-gray-400'}`}></div>
+               </div>
+               
+               <h3 className="text-xl font-bold text-[var(--navy)] mb-1 text-center">
+                 {score.disponible ? score.etiqueta : 'Indeterminado'}
+               </h3>
+               
+               {score.disponible && (
+                 <p className="text-[var(--blue-gray)] text-sm text-center font-medium">
+                   <strong className="text-[var(--charcoal)]">{score.recontratarian} de {score.totalRespuestas}</strong> lo recontratarían
+                 </p>
+               )}
             </div>
-          ) : (
-            <p className="text-sm text-blue-gray">Sin suficientes respuestas.</p>
-          )}
+          </article>
+        </div>
 
-          {score.disponible && (
-            <div className="space-y-3 mt-6">
-              {score.competencias.map((comp) => (
-                <div key={comp.nombre}>
-                  <div className="flex justify-between text-xs font-bold mb-1">
-                    <span className="text-charcoal">{comp.nombre}</span>
-                    <span className="text-navy">{comp.valor}</span>
+        {/* Columna Derecha (Datos y Detalles) */}
+        <div className="lg:col-span-8 flex flex-col gap-8">
+          
+          {/* Card Comentarios */}
+          <article className="theme-card p-8">
+            <h2 className="text-[var(--navy)] text-lg font-bold uppercase tracking-wider mb-6 flex items-center gap-2">
+               <span className="material-symbols-outlined text-[var(--accent-orange)]">format_quote</span>
+               Resumen de Comentarios
+            </h2>
+            
+            {score.disponible ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-[#EAEBE7]/50 rounded-2xl p-6 border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-[var(--navy)] font-bold mb-4 uppercase text-xs tracking-widest">
+                    <span className="material-symbols-outlined text-[16px] text-green-600">thumb_up</span>
+                    Fortalezas
                   </div>
-                  <div className="h-1.5 bg-blue-gray-20 rounded-full overflow-hidden">
-                    <div className="h-full bg-navy rounded-full" style={{ width: `${comp.valor * 10}%` }}></div>
+                  <ul className="space-y-3">
+                    {c.fortalezas.length > 0 ? c.fortalezas.map((f, i) => (
+                      <li key={i} className="text-[var(--charcoal)] text-sm flex gap-2">
+                        <span className="text-green-600 font-bold mt-[-1px]">•</span> {f}
+                      </li>
+                    )) : <li className="text-[var(--blue-gray)] text-sm italic">Sin datos.</li>}
+                  </ul>
+                </div>
+                
+                <div className="bg-[#EAEBE7]/50 rounded-2xl p-6 border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-[var(--navy)] font-bold mb-4 uppercase text-xs tracking-widest">
+                    <span className="material-symbols-outlined text-[16px] text-orange-600">psychology</span>
+                    Áreas de Oportunidad
+                  </div>
+                  <ul className="space-y-3">
+                    {c.areasOportunidad.length > 0 ? c.areasOportunidad.map((f, i) => (
+                      <li key={i} className="text-[var(--charcoal)] text-sm flex gap-2">
+                        <span className="text-orange-600 font-bold mt-[-1px]">•</span> {f}
+                      </li>
+                    )) : <li className="text-[var(--blue-gray)] text-sm italic">Sin datos.</li>}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-[var(--blue-gray)] text-sm py-8 font-medium">
+                Esperando respuestas de los referentes para consolidar los comentarios.
+              </div>
+            )}
+          </article>
+
+          {/* Estado de Referencias */}
+          <article className="theme-card p-8">
+            <div className="flex justify-between items-end mb-6 border-b border-[var(--border)] pb-4">
+               <h2 className="text-[var(--navy)] text-lg font-bold uppercase tracking-wider flex items-center gap-2 m-0">
+                 <span className="material-symbols-outlined text-[var(--accent-orange)]">group</span>
+                 Estado de Referencias
+               </h2>
+               <div className="text-[var(--navy)] font-bold text-sm bg-[var(--off-white)] px-4 py-1.5 rounded-full border border-[var(--border)]">
+                  {c.referencias.filter(r => r.estatus === 'Respondida').length} / {c.referencias.length}
+               </div>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="text-[var(--blue-gray)] text-[11px] uppercase tracking-widest border-b border-[var(--border)]">
+                    <th className="pb-3 px-2 font-bold">Referente</th>
+                    <th className="pb-3 px-2 font-bold">Relación</th>
+                    <th className="pb-3 px-2 font-bold">Estatus</th>
+                    <th className="pb-3 px-2 font-bold text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {c.referencias.map((r) => (
+                    <tr key={r.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--off-white)] transition-colors">
+                      <td className="py-4 px-2">
+                        <div className="font-bold text-[var(--navy)]">{r.nombreReferente}</div>
+                        <div className="text-xs text-[var(--blue-gray)] mt-0.5">{r.empresa}</div>
+                      </td>
+                      <td className="py-4 px-2 text-sm text-[var(--charcoal)]">{r.relacion}</td>
+                      <td className="py-4 px-2">
+                        {r.estatus === 'Respondida' ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#10B981] bg-[#10B981]/10 px-3 py-1 rounded-full border border-[#10B981]/20">
+                            <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                            Respondida
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#F66B40] bg-[#F66B40]/10 px-3 py-1 rounded-full border border-[#F66B40]/20">
+                            <span className="material-symbols-outlined text-[14px]">schedule</span>
+                            Pendiente
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-2 text-right">
+                        {r.estatus !== 'Respondida' ? (
+                          <button className="text-[var(--accent-orange)] text-xs font-bold bg-white border border-[var(--border)] px-3 py-1.5 rounded-lg hover:border-[var(--accent-orange)] transition-colors inline-flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">notifications</span>
+                            Recordar
+                          </button>
+                        ) : (
+                          <span className="text-[var(--blue-gray)] text-xs font-medium">Completada</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {c.referencias.length === 0 && (
+                     <tr><td colSpan="4" className="text-center py-8 text-sm text-[var(--blue-gray)]">No hay referencias.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          {/* Timeline Corporativo */}
+          <article className="theme-card p-8">
+            <h2 className="text-[var(--navy)] text-lg font-bold uppercase tracking-wider mb-6 flex items-center gap-2">
+               <span className="material-symbols-outlined text-[var(--accent-orange)]">history</span>
+               Actividad Reciente
+            </h2>
+            
+            <div className="theme-activity-list mt-2">
+              {c.timeline.map((e, index) => (
+                <div key={e.id} className="theme-activity-item border-0 bg-transparent px-0 py-2 relative flex gap-4 items-start">
+                  {/* Connecting Line */}
+                  {index !== c.timeline.length - 1 && (
+                    <div className="absolute left-[19px] top-10 bottom-[-10px] w-[2px] bg-[var(--border)]"></div>
+                  )}
+                  
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 z-10 ${index === 0 ? 'bg-[var(--navy)] text-white shadow-lg' : 'bg-[var(--off-white)] border-2 border-[var(--border)] text-[var(--charcoal)]'}`}>
+                    <span className="material-symbols-outlined text-[18px]">{e.icono || 'radio_button_checked'}</span>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 pb-4">
+                    <div className="font-bold text-[var(--navy)] text-sm mb-0.5">{e.titulo}</div>
+                    <div className="text-[var(--charcoal)] text-sm mb-1 opacity-90">{e.detalle}</div>
+                    <div className="text-xs text-[var(--blue-gray)] font-medium">{formatoFecha(e.fecha)}</div>
                   </div>
                 </div>
               ))}
+              {c.timeline.length === 0 && (
+                <p className="text-sm text-[var(--blue-gray)] text-center py-4">Sin actividad.</p>
+              )}
             </div>
-          )}
-        </div>
+          </article>
 
-        {/* Semáforo Card */}
-        <div className="bg-white border border-blue-gray-20 rounded-2xl p-6 shadow-sm flex flex-col">
-          <span className="font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-gray">traffic</span>
-            Semáforo de Riesgo
-          </span>
-          <div className="flex flex-col items-center justify-center py-4 mt-2">
-             <div className={`w-16 h-16 rounded-full shadow-lg flex items-center justify-center mb-4 ${score.disponible ? semaforoColors[score.semaforo] : semaforoColors.gris}`}>
-                <div className="w-8 h-8 bg-white opacity-20 rounded-full blur-sm"></div>
-             </div>
-             <span className="text-xl font-bold text-navy">{score.disponible ? score.etiqueta : 'N/A'}</span>
-             {score.disponible && (
-               <p className="text-xs text-blue-gray mt-2 text-center">
-                 {score.recontratarian} de {score.totalRespuestas} referentes lo recontratarían.
-               </p>
-             )}
-          </div>
-        </div>
-
-        {/* Comentarios Resumidos */}
-        <div className="bg-blue-gray-20 rounded-2xl p-6 border border-blue-gray-40 flex flex-col">
-          <span className="font-bold text-charcoal mb-4 flex items-center gap-2">
-            <span className="material-symbols-outlined text-navy">forum</span>
-            Comentarios Destacados
-          </span>
-          {score.disponible ? (
-            <div className="space-y-4">
-              <div>
-                <span className="text-xs font-bold text-navy uppercase tracking-wider">Fortalezas</span>
-                <ul className="mt-1 space-y-1">
-                  {c.fortalezas.map((f, i) => (
-                    <li key={i} className="text-sm text-charcoal flex items-start gap-2">
-                      <span className="material-symbols-outlined text-accent-orange text-sm mt-0.5">check_small</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <span className="text-xs font-bold text-navy uppercase tracking-wider">Áreas de oportunidad</span>
-                <ul className="mt-1 space-y-1">
-                  {c.areasOportunidad.map((f, i) => (
-                    <li key={i} className="text-sm text-charcoal flex items-start gap-2">
-                      <span className="material-symbols-outlined text-blue-gray text-sm mt-0.5">info</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-charcoal opacity-70">El resumen se generará al recibir respuestas.</p>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Tabla de Referencias */}
-        <div className="lg:col-span-2 bg-white border border-blue-gray-20 rounded-2xl p-6 shadow-sm">
-          <h2 className="font-bold text-charcoal mb-6">Referencias ({c.referencias.filter(r => r.estatus === 'Respondida').length}/{c.referencias.length})</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-blue-gray-40 text-blue-gray uppercase text-xs">
-                  <th className="pb-3 font-bold">Referente</th>
-                  <th className="pb-3 font-bold">Relación</th>
-                  <th className="pb-3 font-bold">Estatus</th>
-                  <th className="pb-3 font-bold">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {c.referencias.map((r) => (
-                  <tr key={r.id} className="border-b border-blue-gray-20 last:border-0">
-                    <td className="py-4">
-                      <div className="font-bold text-charcoal">{r.nombreReferente}</div>
-                      <div className="text-xs text-blue-gray">{r.empresa}</div>
-                    </td>
-                    <td className="py-4 text-charcoal">{r.relacion}</td>
-                    <td className="py-4">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold ${r.estatus === 'Respondida' ? 'bg-green-50 text-green-700' : 'bg-blue-gray-20 text-navy'}`}>
-                        {r.estatus}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      {r.estatus !== 'Respondida' && (
-                        <button className="text-accent-orange font-bold text-xs flex items-center gap-1 hover:underline">
-                          <span className="material-symbols-outlined text-sm">notifications</span>
-                          Recordatorio
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="bg-white border border-blue-gray-20 rounded-2xl p-6 shadow-sm">
-          <h2 className="font-bold text-charcoal mb-6">Línea de Tiempo</h2>
-          <div className="relative border-l-2 border-blue-gray-40 ml-4 space-y-8 py-2">
-            {c.timeline.map((e) => (
-              <div key={e.id} className="relative pl-6">
-                <div className="absolute -left-[17px] top-0 bg-white border-2 border-accent-orange rounded-full w-8 h-8 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-accent-orange text-sm">{e.icono || 'circle'}</span>
-                </div>
-                <div className="text-xs text-blue-gray mb-1">{formatoFecha(e.fecha)}</div>
-                <div className="font-bold text-charcoal text-sm">{e.titulo}</div>
-                {e.detalle && <div className="text-xs text-blue-gray mt-1">{e.detalle}</div>}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
   );
 }
+

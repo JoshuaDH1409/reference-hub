@@ -27,7 +27,8 @@ export default function Reportes() {
 
   const exportarPDF = async () => {
     try {
-      const response = await fetch('http://localhost:5155/api/dashboard/reporte/pdf');
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/dashboard/reporte/pdf`);
       if (!response.ok) throw new Error('Error al generar PDF');
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

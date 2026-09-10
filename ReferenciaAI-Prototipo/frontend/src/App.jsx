@@ -11,6 +11,7 @@ import Reportes from './pages/Reportes.jsx';
 import AuthLogin from './pages/AuthLogin.jsx';
 import ConfigTenant from './pages/ConfigTenant.jsx';
 import SuperAdminDashboard from './pages/SuperAdminDashboard.jsx';
+import Agente from './pages/Agente.jsx';
 
 function LayoutAdmin({ children }) {
   const location = useLocation();
@@ -80,6 +81,15 @@ function LayoutAdmin({ children }) {
                       <span className="left">
                         <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 19V5l16 7-16 7Z"/></svg>
                         Reportes
+                      </span>
+                      <span>›</span>
+                    </Link>
+                  </li>
+                  <li className={`theme-nav-item ${location.pathname.startsWith('/agente') ? 'active' : ''}`}>
+                    <Link to="/agente" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <span className="left">
+                        <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/></svg>
+                        Agente IA
                       </span>
                       <span>›</span>
                     </Link>
@@ -161,6 +171,7 @@ export default function App() {
       <Route path="/candidatos/:id" element={<LayoutAdmin><Expediente /></LayoutAdmin>} />
       <Route path="/correos" element={<LayoutAdmin><Correos /></LayoutAdmin>} />
       <Route path="/reportes" element={<LayoutAdmin><Reportes /></LayoutAdmin>} />
+      <Route path="/agente" element={<LayoutAdmin><Agente /></LayoutAdmin>} />
       <Route path="/configuracion" element={<LayoutAdmin><ConfigTenant /></LayoutAdmin>} />
       
       {/* Vista Súper Admin */}

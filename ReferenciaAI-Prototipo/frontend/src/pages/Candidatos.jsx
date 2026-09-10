@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, formatoFecha } from '../api.js'
 import NuevoCandidato from './NuevoCandidato.jsx'
+import ImportarCandidatos from './ImportarCandidatos.jsx'
 
 function SemaforoMini({ score }) {
   if (!score || !score.disponible) {
@@ -24,6 +25,7 @@ export default function Candidatos() {
   const [candidatos, setCandidatos] = useState(null)
   const [error, setError] = useState('')
   const [modalAbierta, setModalAbierta] = useState(false)
+  const [modalImportarAbierta, setModalImportarAbierta] = useState(false)
   const navegar = useNavigate()
 
   const cargarDatos = () => {
@@ -47,10 +49,16 @@ export default function Candidatos() {
           <h1>Candidatos</h1>
           <div className="theme-subtitle">Administra los expedientes y procesos de referencia de los candidatos.</div>
         </div>
-        <button className="theme-cta" onClick={() => setModalAbierta(true)}>
-          <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
-          Registrar Candidato
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="theme-btn-secondary" onClick={() => setModalImportarAbierta(true)} style={{ padding: '8px 16px', fontSize: '0.9rem' }}>
+            <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Importar Excel
+          </button>
+          <button className="theme-cta" onClick={() => setModalAbierta(true)}>
+            <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+            Registrar Candidato
+          </button>
+        </div>
       </div>
 
       <article className="theme-card theme-panel">
@@ -117,6 +125,13 @@ export default function Candidatos() {
       {modalAbierta && (
         <NuevoCandidato onClose={() => {
           setModalAbierta(false)
+          cargarDatos()
+        }} />
+      )}
+
+      {modalImportarAbierta && (
+        <ImportarCandidatos onClose={() => {
+          setModalImportarAbierta(false)
           cargarDatos()
         }} />
       )}

@@ -12,6 +12,7 @@ public class AppDb : DbContext
     public DbSet<CorreoSimulado> Correos => Set<CorreoSimulado>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<ReporteDashboard> ReportesDashboard => Set<ReporteDashboard>();
+    public DbSet<Pregunta> Preguntas => Set<Pregunta>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -43,6 +44,97 @@ public static class DatosIniciales
             });
             db.SaveChanges();
         }
+
+        if (!db.Preguntas.Any())
+        {
+            var preguntasBase = new List<Pregunta>
+            {
+                // General
+                new Pregunta { Area = "General", TextoPregunta = "¿Qué calificación le otorgaría a la puntualidad y cumplimiento de compromisos del candidato?" },
+                new Pregunta { Area = "General", TextoPregunta = "¿Cómo califica la capacidad del candidato para adaptarse a cambios inesperados o nuevas directrices?" },
+                new Pregunta { Area = "General", TextoPregunta = "¿En qué nivel evalúa la disposición del candidato para colaborar y hacer equipo con sus compañeros?" },
+                new Pregunta { Area = "General", TextoPregunta = "¿Qué calificación le daría al nivel de ética profesional y honestidad demostrado por el candidato en el día a día?" },
+                new Pregunta { Area = "General", TextoPregunta = "¿Cómo evalúa la actitud y capacidad del candidato para recibir retroalimentación constructiva y aplicarla?" },
+
+                // Ventas
+                new Pregunta { Area = "Ventas", TextoPregunta = "¿Cómo califica la habilidad del candidato para persuadir, manejar objeciones y cerrar negociaciones exitosamente?" },
+                new Pregunta { Area = "Ventas", TextoPregunta = "¿Qué nivel de resiliencia y manejo de frustración demostró el candidato frente a rechazos o metas difíciles?" },
+                new Pregunta { Area = "Ventas", TextoPregunta = "¿Cómo evalúa la proactividad del candidato para buscar nuevos prospectos y expandir la cartera de clientes?" },
+                new Pregunta { Area = "Ventas", TextoPregunta = "¿En qué medida el candidato lograba construir y mantener relaciones de confianza a largo plazo con los clientes?" },
+                new Pregunta { Area = "Ventas", TextoPregunta = "¿Qué calificación le daría a la habilidad del candidato para entender rápidamente las necesidades del cliente y ofrecer la solución adecuada?" },
+
+                // Tecnología
+                new Pregunta { Area = "Tecnología", TextoPregunta = "¿Cómo califica la capacidad analítica del candidato para diagnosticar y resolver problemas técnicos complejos?" },
+                new Pregunta { Area = "Tecnología", TextoPregunta = "¿Qué nivel de calidad, orden y buenas prácticas mantenía el candidato en sus entregables?" },
+                new Pregunta { Area = "Tecnología", TextoPregunta = "¿En qué medida el candidato demostró autonomía para investigar y aprender nuevas tecnologías por su cuenta?" },
+                new Pregunta { Area = "Tecnología", TextoPregunta = "¿Cómo evalúa la capacidad del candidato para explicar conceptos técnicos de manera clara a personas de otras áreas?" },
+                new Pregunta { Area = "Tecnología", TextoPregunta = "¿Qué calificación le otorgaría a la eficiencia del candidato para trabajar bajo presión en situaciones críticas?" },
+
+                // Atención al Cliente
+                new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Cómo califica el nivel de empatía y paciencia del candidato al tratar con clientes molestos o situaciones tensas?" },
+                new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Qué nivel de claridad y asertividad demostró el candidato en su comunicación verbal y escrita con los usuarios?" },
+                new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿En qué medida el candidato era resolutivo y capaz de solucionar quejas o problemas en el primer contacto?" },
+                new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Cómo evalúa la actitud del candidato para mantener la calidad del servicio bajo un alto volumen de solicitudes?" },
+                new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Qué calificación le daría a la vocación de servicio general y la disposición para exceder las expectativas del cliente?" },
+
+                // Finanzas
+                new Pregunta { Area = "Finanzas", TextoPregunta = "¿Cómo califica el nivel de atención al detalle y precisión del candidato en el manejo de cifras, presupuestos o reportes?" },
+                new Pregunta { Area = "Finanzas", TextoPregunta = "¿Qué nivel de discreción e integridad demostró el candidato al trabajar con información financiera confidencial?" },
+                new Pregunta { Area = "Finanzas", TextoPregunta = "¿En qué medida el candidato era capaz de organizar su tiempo para cumplir estrictamente con fechas límite críticas?" },
+                new Pregunta { Area = "Finanzas", TextoPregunta = "¿Cómo evalúa la capacidad analítica del candidato para identificar riesgos, discrepancias o áreas de ahorro?" },
+                new Pregunta { Area = "Finanzas", TextoPregunta = "¿Qué calificación le otorgaría a la rigurosidad del candidato para apegarse a políticas, normativas internas y procesos de cumplimiento?" }
+            };
+            db.Preguntas.AddRange(preguntasBase);
+            db.SaveChanges();
+        }
+
+        // Nuevas Preguntas por Área (Escala 1 a 10)
+        var nuevasPreguntas = new List<Pregunta>
+        {
+            // General
+            new Pregunta { Area = "General", TextoPregunta = "¿En qué medida el candidato demuestra iniciativa para resolver problemas sin esperar a recibir instrucciones detalladas?" },
+            new Pregunta { Area = "General", TextoPregunta = "¿Cómo califica la capacidad del candidato para mantener la calma y la claridad mental en situaciones de alta presión?" },
+            new Pregunta { Area = "General", TextoPregunta = "¿Qué nivel de compromiso y lealtad mostró el candidato hacia los objetivos y valores de la empresa?" },
+            new Pregunta { Area = "General", TextoPregunta = "¿En qué grado el candidato asume la responsabilidad de sus propios errores sin culpar a terceros ni buscar excusas?" },
+            new Pregunta { Area = "General", TextoPregunta = "¿Cómo evalúa la capacidad del candidato para organizar sus prioridades y cumplir con múltiples tareas simultáneas de manera eficiente?" },
+
+            // Ventas
+            new Pregunta { Area = "Ventas", TextoPregunta = "¿Qué calificación le daría al conocimiento del candidato sobre el mercado, los competidores y el producto o servicio que estaba vendiendo?" },
+            new Pregunta { Area = "Ventas", TextoPregunta = "¿En qué medida el candidato lograba cumplir o superar consistentemente sus cuotas y objetivos comerciales fijados?" },
+            new Pregunta { Area = "Ventas", TextoPregunta = "¿Cómo evalúa la capacidad del candidato para realizar un seguimiento efectivo (follow-up) con los clientes sin llegar a ser invasivo?" },
+            new Pregunta { Area = "Ventas", TextoPregunta = "¿Qué calificación le otorgaría a la habilidad del candidato para identificar oportunidades de upselling o ventas cruzadas?" },
+            new Pregunta { Area = "Ventas", TextoPregunta = "¿Cómo califica la seguridad y eficacia del candidato al realizar presentaciones comerciales ante tomadores de decisiones?" },
+
+            // Tecnología
+            new Pregunta { Area = "Tecnología", TextoPregunta = "¿En qué grado el candidato se aseguraba de realizar pruebas adecuadas (testing) antes de liberar un desarrollo, cambio o implementación?" },
+            new Pregunta { Area = "Tecnología", TextoPregunta = "¿Cómo evalúa la capacidad del candidato para documentar su código, sistemas o procesos de manera clara para el resto del equipo?" },
+            new Pregunta { Area = "Tecnología", TextoPregunta = "¿Qué calificación le daría a la habilidad del candidato para integrarse y aportar valor dentro de marcos de trabajo ágiles (ej. Scrum)?" },
+            new Pregunta { Area = "Tecnología", TextoPregunta = "¿Cómo califica la proactividad del candidato para identificar deuda técnica o sugerir mejoras arquitectónicas en los sistemas?" },
+            new Pregunta { Area = "Tecnología", TextoPregunta = "¿En qué medida el candidato compartía su conocimiento técnico y servía como apoyo para desarrolladores de menor seniority?" },
+
+            // Atención al Cliente
+            new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Qué calificación le daría a la habilidad del candidato para leer las emociones del cliente y ajustar su tono o discurso en consecuencia?" },
+            new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿En qué medida el candidato lograba transformar una queja grave o mala experiencia en una situación de satisfacción y retención del cliente?" },
+            new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Cómo califica la agilidad del candidato para navegar por los sistemas internos mientras resolvía una consulta en vivo?" },
+            new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Qué nivel de precisión demostraba el candidato al proporcionar información sobre políticas, garantías o servicios, evitando dar datos erróneos?" },
+            new Pregunta { Area = "Atención al Cliente", TextoPregunta = "¿Cómo evalúa la disciplina del candidato para dejar un registro claro, detallado y útil de cada interacción en el sistema de tickets o CRM?" },
+
+            // Finanzas
+            new Pregunta { Area = "Finanzas", TextoPregunta = "¿En qué grado el candidato lograba comunicar reportes o hallazgos financieros complejos de forma comprensible a directivos no financieros?" },
+            new Pregunta { Area = "Finanzas", TextoPregunta = "¿Cómo califica la habilidad del candidato para optimizar procesos contables, reduciendo tiempos muertos o errores manuales?" },
+            new Pregunta { Area = "Finanzas", TextoPregunta = "¿Qué calificación le otorgaría a la precisión y fiabilidad del candidato al realizar proyecciones de flujo de caja o análisis de rentabilidad?" },
+            new Pregunta { Area = "Finanzas", TextoPregunta = "¿En qué medida el candidato se mantenía actualizado y aplicaba correctamente los cambios en la legislación fiscal, tributaria o contable?" },
+            new Pregunta { Area = "Finanzas", TextoPregunta = "¿Cómo evalúa la capacidad y criterio del candidato para custodiar los recursos de la empresa y detectar posibles fugas de capital o gastos innecesarios?" }
+        };
+
+        foreach (var np in nuevasPreguntas)
+        {
+            if (!db.Preguntas.Any(p => p.TextoPregunta == np.TextoPregunta))
+            {
+                db.Preguntas.Add(np);
+            }
+        }
+        db.SaveChanges();
 
         if (db.Candidatos.Count() >= 10) return;
 

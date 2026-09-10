@@ -67,3 +67,17 @@ frontend/
   trabajo programado (background service) según la configuración del cliente.
 - Sin autenticación de usuarios (fuera de alcance del prototipo).
 - Para reiniciar los datos de demo: detén la API y borra `backend/referencia_ai.db`.
+
+## Despliegue en Azure
+
+El repositorio incluye dos workflows de GitHub Actions:
+
+- `deploy-api.yml`: publica `backend` en `referenciasai-api`.
+- `deploy-web.yml`: construye `frontend/dist` y lo publica en `referenciasai-web`.
+
+Configura estos secretos en GitHub, en **Settings > Secrets and variables > Actions**:
+
+- `AZURE_WEBAPP_PUBLISH_PROFILE`: publish profile de `referenciasai-api`.
+- `AZURE_WEBAPP_PUBLISH_PROFILE_WEB`: publish profile de `referenciasai-web`.
+
+El frontend usa `https://referenciasai-api.azurewebsites.net` como URL de producción mediante `frontend/.env.production`.

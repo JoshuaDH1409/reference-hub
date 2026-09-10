@@ -34,10 +34,8 @@ namespace ReferenciaAI.Api
             message.To.Add(new MailboxAddress("", correo.Para));
             message.Subject = correo.Asunto;
 
-            message.Body = new TextPart("plain")
-            {
-                Text = correo.Cuerpo
-            };
+            var builder = new BodyBuilder { HtmlBody = correo.Cuerpo };
+            message.Body = builder.ToMessageBody();
 
             using var client = new SmtpClient();
             

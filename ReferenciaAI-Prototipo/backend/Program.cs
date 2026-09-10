@@ -6,11 +6,14 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Hangfire;
-using Hangfire.MemoryStorage;
+using Hangfire.SqlServer;
+
+// ... (top of file remains) ...
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDb>(o => o.UseSqlite("Data Source=referencia_ai.db"));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDb>(o => o.UseSqlServer(connectionString));
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -38,7 +41,7 @@ builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseMemoryStorage());
+    .UseSqlServerStorage(connectionString));
 
 // Iniciar el servidor de Hangfire
 builder.Services.AddHangfireServer();
@@ -243,6 +246,104 @@ app.MapPost("/api/candidatos", async (AppDb db, IEmailService emailService, Nuev
     return Results.Created($"/api/candidatos/{candidato.Id}", new { candidato.Id });
 });
 
+app.MapPost("/api/candidatos/importar", async (AppDb db, IEmailService emailService, IFormFile file) =>
+{
+    if (file == null || file.Length == 0)
+        return Results.BadRequest(new { error = "No se subió ningún archivo." });
+
+    if (!file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "El archivo debe ser un documento Excel (.xlsx)." });
+
+    try
+    {
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream);
+        using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+        var worksheet = workbook.Worksheet(1);
+        var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Skip header
+
+        var candidatosDict = new Dictionary<string, Candidato>();
+
+        foreach (var row in rows)
+        {
+            var nombreCandidato = row.Cell(1).GetString().Trim();
+            var emailCandidato = row.Cell(2).GetString().Trim();
+            var puestoCandidato = row.Cell(3).GetString().Trim();
+            
+            var nombreReferente = row.Cell(4).GetString().Trim();
+            var empresa = row.Cell(5).GetString().Trim();
+            var puestoReferente = row.Cell(6).GetString().Trim();
+            var relacion = row.Cell(7).GetString().Trim();
+            var emailReferente = row.Cell(8).GetString().Trim();
+            var telefono = row.Cell(9).GetString().Trim();
+
+            if (string.IsNullOrEmpty(nombreCandidato) || string.IsNullOrEmpty(nombreReferente) || string.IsNullOrEmpty(emailReferente))
+                continue;
+
+            var key = !string.IsNullOrEmpty(emailCandidato) ? emailCandidato.ToLower() : nombreCandidato.ToLower();
+
+            if (!candidatosDict.TryGetValue(key, out var candidato))
+            {
+                candidato = new Candidato
+                {
+                    Nombre = nombreCandidato,
+                    Email = emailCandidato,
+                    Puesto = puestoCandidato
+                };
+                candidatosDict[key] = candidato;
+                db.Candidatos.Add(candidato);
+            }
+
+            candidato.Referencias.Add(new Referencia
+            {
+                NombreReferente = nombreReferente,
+                Empresa = empresa,
+                PuestoReferente = puestoReferente,
+                Relacion = relacion,
+                Email = emailReferente,
+                Telefono = telefono
+            });
+        }
+
+        await db.SaveChangesAsync();
+
+        int totalReferencias = 0;
+        foreach (var c in candidatosDict.Values)
+        {
+            db.Eventos.Add(new EventoTimeline
+            {
+                CandidatoId = c.Id,
+                Titulo = "Candidato registrado (Importación Excel)",
+                Detalle = $"Vacante: {c.Puesto}"
+            });
+
+            foreach (var r in c.Referencias)
+            {
+                var correo = Notificaciones.CorreoInvitacion(c, r);
+                db.Correos.Add(correo);
+                try { await emailService.EnviarCorreoAsync(correo); } catch { }
+
+                db.Eventos.Add(new EventoTimeline
+                {
+                    CandidatoId = c.Id,
+                    Titulo = "Invitación enviada",
+                    Detalle = $"{r.NombreReferente} ({r.Email})"
+                });
+                totalReferencias++;
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { mensaje = $"Se importaron exitosamente {candidatosDict.Count} candidatos con {totalReferencias} referencias en total." });
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = $"Error procesando el archivo Excel: {ex.Message}" });
+    }
+})
+.DisableAntiforgery();
+
 app.MapGet("/api/candidatos/{id:int}", async (AppDb db, int id) =>
 {
     var c = await db.Candidatos.Include(x => x.Referencias)
@@ -418,9 +519,32 @@ app.MapPost("/api/v1/publico/cuestionario/{token}", async (AppDb db, string toke
     return Results.Ok(new { mensaje = "¡Gracias! Su respuesta fue registrada correctamente." });
 });
 
+// ===================== Preguntas =====================
+
+app.MapGet("/api/v1/preguntas/{area}", async (AppDb db, string area) =>
+{
+    var preguntas = await db.Preguntas
+        .Where(p => p.Area.ToLower() == area.ToLower())
+        .Select(p => new PreguntaDto(p.Id, p.Area, p.TextoPregunta, p.Tipo, p.Activa))
+        .ToListAsync();
+        
+    return Results.Ok(preguntas);
+});
+
+app.MapPut("/api/v1/preguntas/{id:int}/toggle", async (AppDb db, int id) =>
+{
+    var pregunta = await db.Preguntas.FindAsync(id);
+    if (pregunta is null) return Results.NotFound();
+
+    pregunta.Activa = !pregunta.Activa;
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new PreguntaDto(pregunta.Id, pregunta.Area, pregunta.TextoPregunta, pregunta.Tipo, pregunta.Activa));
+});
+
 // ===================== Bandeja de correos simulados =====================
 
 app.MapGet("/api/correos", async (AppDb db) =>
     Results.Ok(await db.Correos.OrderByDescending(c => c.Fecha).ToListAsync()));
 
-app.Run("http://localhost:5155");
+app.Run();

@@ -115,20 +115,13 @@ public static class Notificaciones
             ReferenciaId = r.Id,
             Fecha = r.FechaEnvio.AddMinutes(5),
             Asunto = $"Solicitud de referencia laboral — {c.Nombre}",
-            Cuerpo =
-$@"Estimado(a) {r.NombreReferente}:
-
-{c.Nombre} lo(a) ha señalado como referencia laboral dentro de un proceso de evaluación para la vacante de {c.Puesto}.
-
-Le agradeceremos responder un breve cuestionario (menos de 5 minutos) en el siguiente enlace seguro:
-
-{enlace}
-
-Sus respuestas serán tratadas de manera confidencial y utilizadas exclusivamente para este proceso.
-
-Gracias por su tiempo.
-
-Referencia AI — EstrategIA Tecnológica"
+            Cuerpo = GenerarPlantillaHtml(
+                r.NombreReferente,
+                $"<strong>{c.Nombre}</strong> lo(a) ha señalado como referencia laboral dentro de un proceso de evaluación para la vacante de <strong>{c.Puesto}</strong>.",
+                "Le agradeceremos responder un breve cuestionario confidencial (le tomará menos de 5 minutos).",
+                enlace,
+                "Completar Referencia"
+            )
         };
     }
 
@@ -141,19 +134,52 @@ Referencia AI — EstrategIA Tecnológica"
             Tipo = "Recordatorio",
             CandidatoId = c.Id,
             ReferenciaId = r.Id,
-            Asunto = $"Recordatorio: referencia laboral pendiente — {c.Nombre}",
-            Cuerpo =
-$@"Estimado(a) {r.NombreReferente}:
-
-Le recordamos amablemente que tiene pendiente responder el cuestionario de referencia laboral de {c.Nombre}.
-
-Puede hacerlo en el siguiente enlace seguro:
-
-{enlace}
-
-Gracias por su apoyo.
-
-Referencia AI — EstrategIA Tecnológica"
+            Asunto = $"Recordatorio urgente: Referencia laboral pendiente — {c.Nombre}",
+            Cuerpo = GenerarPlantillaHtml(
+                r.NombreReferente,
+                $"Le recordamos amablemente que tiene pendiente responder el cuestionario de referencia laboral de <strong>{c.Nombre}</strong>.",
+                "Su respuesta es muy importante para que el candidato pueda continuar con su proceso de selección. Le tomará menos de 5 minutos.",
+                enlace,
+                "Completar Referencia Ahora"
+            )
         };
+    }
+
+    private static string GenerarPlantillaHtml(string nombre, string parrafo1, string parrafo2, string enlace, string textoBoton)
+    {
+        return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+</head>
+<body style=""font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #334155;"">
+    <div style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"">
+        <div style=""background-color: #0b1f38; color: #ffffff; padding: 20px; text-align: center;"">
+            <h1 style=""margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;"">Referencia AI</h1>
+        </div>
+        <div style=""padding: 30px; line-height: 1.6;"">
+            <p style=""font-size: 16px; margin-top: 0;"">Estimado(a) <strong>{nombre}</strong>,</p>
+            <p style=""font-size: 16px;"">{parrafo1}</p>
+            <p style=""font-size: 16px;"">{parrafo2}</p>
+            
+            <div style=""text-align: center; margin: 30px 0;"">
+                <a href=""{enlace}"" style=""display: inline-block; background-color: #ff6b35; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: bold; font-size: 16px;"">{textoBoton}</a>
+            </div>
+            
+            <p style=""font-size: 14px; color: #64748b;"">
+                Si el botón no funciona, copie y pegue el siguiente enlace en su navegador:<br>
+                <a href=""{enlace}"" style=""color: #0b1f38; word-break: break-all;"">{enlace}</a>
+            </p>
+            <p style=""font-size: 16px; margin-bottom: 0;"">Gracias por su tiempo e inestimable apoyo.</p>
+        </div>
+        <div style=""background-color: #f8fafc; padding: 15px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0;"">
+            Este es un correo automático, por favor no responda a este mensaje.<br>
+            &copy; {DateTime.Now.Year} EstrategIA Tecnológica &middot; Todos los derechos reservados
+        </div>
+    </div>
+</body>
+</html>";
     }
 }

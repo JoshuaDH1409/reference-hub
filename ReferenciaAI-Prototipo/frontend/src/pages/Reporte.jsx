@@ -24,7 +24,8 @@ export default function Reporte() {
           <Link to={`/candidatos/${c.id}`}>&larr; Volver al expediente</Link>
           <button className="boton chico" onClick={async () => {
             try {
-              const res = await fetch(`http://localhost:5155/api/candidatos/${c.id}/reporte/pdf`);
+              const baseUrl = import.meta.env.VITE_API_URL || '';
+              const res = await fetch(`${baseUrl}/api/candidatos/${c.id}/reporte/pdf`);
               if (!res.ok) throw new Error('Error al descargar PDF');
               const blob = await res.blob();
               const url = window.URL.createObjectURL(blob);
