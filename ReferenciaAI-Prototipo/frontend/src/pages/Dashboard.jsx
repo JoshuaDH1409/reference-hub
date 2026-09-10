@@ -31,7 +31,7 @@ export default function Dashboard() {
   const navegar = useNavigate();
   const { data: datos, isLoading, isError, error } = useDashboardData();
 
-  if (isError) return <div className="error-msg">No se pudo conectar con la API: {error?.message}. Verifica que el backend esté corriendo.</div>;
+  if (isError) return <div className="error-msg">No se pudieron cargar los datos.</div>;
   if (isLoading || !datos) return (
     <div className="flex justify-center items-center h-64">
       <div className="animate-pulse flex flex-col items-center">
@@ -52,7 +52,7 @@ export default function Dashboard() {
         <div>
           <div className="theme-eyebrow">Dashboards › Analytics</div>
           <h1>Analítica de referencias y talento</h1>
-
+          <div className="theme-subtitle">Panel analítico de Reference Hub: métricas, KPIs y semáforo de riesgo sobre referencias laborales.</div>
         </div>
         <button className="theme-cta" onClick={() => navegar('/reportes')}>
           <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></svg>

@@ -30,10 +30,10 @@ export default function AuthLogin() {
         {/* Logo */}
         <div className="relative z-10 flex items-center gap-4 mt-8">
           <div className="w-12 h-12 bg-accent-orange rounded-xl shadow-lg shadow-accent-orange/20 flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-2xl">check_circle</span>
+            <span className="material-symbols-outlined text-white text-2xl">hub</span>
           </div>
           <span className="font-extrabold text-3xl tracking-tight text-white">
-            Referencia<span className="text-accent-orange">AI</span>
+            Reference<span className="text-accent-orange">Hub</span>
           </span>
         </div>
 
@@ -49,7 +49,7 @@ export default function AuthLogin() {
 
         {/* Footer Branding */}
         <div className="relative z-10 text-sm text-blue-gray/60 font-medium">
-          &copy; {new Date().getFullYear()} EstrategIA Tecnológica. Todos los derechos reservados.
+          &copy; {new Date().getFullYear()} Reference Hub.
         </div>
       </div>
 
@@ -59,10 +59,10 @@ export default function AuthLogin() {
         {/* Logo versión móvil */}
         <div className="absolute top-8 left-8 lg:hidden flex items-center gap-3">
           <div className="w-10 h-10 bg-accent-orange rounded-xl shadow-md flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-xl">check_circle</span>
+            <span className="material-symbols-outlined text-white text-xl">hub</span>
           </div>
           <span className="font-extrabold text-2xl tracking-tight text-navy">
-            Referencia<span className="text-accent-orange">AI</span>
+            Reference<span className="text-accent-orange">Hub</span>
           </span>
         </div>
 

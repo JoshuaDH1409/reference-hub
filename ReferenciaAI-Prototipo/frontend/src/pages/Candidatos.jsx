@@ -29,7 +29,7 @@ export default function Candidatos() {
   const navegar = useNavigate()
 
   const cargarDatos = () => {
-    api.dashboard().then(res => setCandidatos(res.candidatos)).catch((e) => {
+    api.dashboard().then(res => setCandidatos(res.candidatos || [])).catch((e) => {
       setError(e.message)
     })
   }

@@ -21,10 +21,10 @@ function LayoutAdmin({ children }) {
     <div className="theme-app">
       <aside className="theme-sidebar" id="sidebar">
         <div className="theme-brand">
-          <div className="theme-brand-mark">IA</div>
+          <div className="theme-brand-mark">RH</div>
           <div className="theme-brand-text">
-            <strong>EstrategIA</strong>
-            <span>Tecnológica · Analytics</span>
+            <strong>Reference Hub</strong>
+            <span>Talent · References</span>
           </div>
         </div>
 
@@ -116,7 +116,7 @@ function LayoutAdmin({ children }) {
         </nav>
         
         <div className="theme-sidebar-footer">
-          <div><strong>Empresa:</strong> EstrategIA Tecnológica</div>
+          <div><strong>Product:</strong> Reference Hub</div>
           <div style={{ marginTop: '6px' }}>
             <Link to="/login" style={{ color: 'rgba(234, 242, 245, 0.8)' }}>Cerrar sesión</Link>
           </div>
