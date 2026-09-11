@@ -136,22 +136,27 @@ public static class DatosIniciales
         }
         db.SaveChanges();
 
-        if (!isDevelopment || db.Candidatos.Count() >= 10) return;
+        if (db.Candidatos.Count() >= 10) return;
 
         var rand = new Random();
         var hoy = DateTime.Now;
-        var nombres = new[] { "Ana", "Carlos", "María", "José", "Daniela", "Luis", "Patricia", "Roberto", "Sofía", "Miguel", "Lucía", "Jorge", "Carmen", "Fernando", "Elena" };
-        var apellidos = new[] { "López", "Mendoza", "Ruiz", "Torres", "Aguilar", "Arredondo", "Beltrán", "García", "Martínez", "Sánchez", "Romero", "Vargas" };
-        var puestos = new[] { "Gerente de Proyectos TI", "Contador Senior", "Ejecutiva de Ventas", "Desarrollador Full Stack", "Analista de Datos", "Director Comercial", "Diseñador UX/UI", "Asesor Financiero", "Especialista en Marketing" };
-        var empresas = new[] { "Grupo Alfa", "Industrias Delta", "Comercial MX", "Consultores BETA", "Tech Solutions", "Finanzas Global", "Global Corp", "Innovación SA" };
+        var nombres = new[] { "Ana", "Carlos", "María", "José", "Daniela", "Luis", "Patricia", "Roberto", "Sofía", "Miguel", "Lucía", "Jorge", "Carmen", "Fernando", "Elena", "Diego", "Valeria", "Ricardo", "Camila", "Javier" };
+        var apellidos = new[] { "López", "Mendoza", "Ruiz", "Torres", "Aguilar", "Arredondo", "Beltrán", "García", "Martínez", "Sánchez", "Romero", "Vargas", "Gómez", "Flores", "Díaz", "Morales", "Ramírez", "Cruz" };
+        var puestos = new[] { "Gerente de Proyectos TI", "Contador Senior", "Ejecutiva de Ventas", "Desarrollador Full Stack", "Analista de Datos", "Director Comercial", "Diseñador UX/UI", "Asesor Financiero", "Especialista en Marketing", "Ingeniero DevOps", "Scrum Master", "HR Business Partner" };
+        var empresas = new[] { "Grupo Alfa", "Industrias Delta", "Comercial MX", "Consultores BETA", "Tech Solutions", "Finanzas Global", "Global Corp", "Innovación SA", "Latam Tech", "Servicios Omega" };
 
         var nuevosCandidatos = new List<Candidato>();
-        // Generate 60 candidates
-        for (int i = 0; i < 60; i++)
+        // Generate 150 candidates for a rich realistic graph
+        for (int i = 0; i < 150; i++)
         {
-            var diasAtras = rand.Next(0, 360); // Spread across 12 months
+            var weight = rand.NextDouble();
+            // 50% in last 30 days, 30% in 30-90 days, 20% in 90-360 days (creates peaks and valleys)
+            int diasAtras = weight > 0.5 ? rand.Next(0, 30) : (weight > 0.2 ? rand.Next(30, 90) : rand.Next(90, 360));
             var fechaReg = hoy.AddDays(-diasAtras);
-            var isCompletado = rand.NextDouble() > 0.3; // 70% completed, 30% in progress
+            
+            // Completion rate changes slightly based on time (older are more likely completed)
+            double completionChance = diasAtras > 30 ? 0.85 : 0.4;
+            var isCompletado = rand.NextDouble() < completionChance; 
             
             var nombreCompleto = $"{nombres[rand.Next(nombres.Length)]} {apellidos[rand.Next(apellidos.Length)]} {apellidos[rand.Next(apellidos.Length)]}";
             
