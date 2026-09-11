@@ -24,18 +24,18 @@ public class PdfReportService : IPdfReportService
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
+                page.Margin(0); // Removing margin to allow full-width header
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Arial));
 
                 page.Header().Element(c => ComposeHeader(c, candidato));
-                page.Content().Element(c => ComposeContent(c, candidato));
-                page.Footer().AlignCenter().Text(x =>
+                page.Content().Padding(2, Unit.Centimetre).Element(c => ComposeContent(c, candidato));
+                page.Footer().PaddingHorizontal(2, Unit.Centimetre).PaddingBottom(1, Unit.Centimetre).AlignCenter().Text(x =>
                 {
-                    x.Span("Página ");
-                    x.CurrentPageNumber();
-                    x.Span(" de ");
-                    x.TotalPages();
+                    x.Span("Página ").FontColor(Colors.Grey.Medium);
+                    x.CurrentPageNumber().FontColor(Colors.Grey.Medium);
+                    x.Span(" de ").FontColor(Colors.Grey.Medium);
+                    x.TotalPages().FontColor(Colors.Grey.Medium);
                 });
             });
         });
@@ -45,26 +45,41 @@ public class PdfReportService : IPdfReportService
 
     private void ComposeHeader(IContainer container, Candidato candidato)
     {
-        var titleStyle = TextStyle.Default.FontSize(20).SemiBold().FontColor(Colors.Blue.Darken2);
-
-        container.Row(row =>
+        container.Background(Colors.Blue.Darken3).Padding(2, Unit.Centimetre).PaddingVertical(1.5f, Unit.Centimetre).Row(row =>
         {
             row.RelativeItem().Column(column =>
             {
-                column.Item().Text($"Reporte de Referencias: {candidato.Nombre}").Style(titleStyle);
-                column.Item().Text(text =>
-                {
-                    text.Span("Puesto: ").SemiBold();
-                    text.Span(candidato.Puesto);
-                });
-                column.Item().Text(text =>
-                {
-                    text.Span("Fecha de Generación: ").SemiBold();
-                    text.Span(DateTime.Now.ToString("dd/MM/yyyy"));
-                });
+                column.Item().Text($"Reporte de Referencias Laborales").FontSize(24).SemiBold().FontColor(Colors.White);
+                column.Item().PaddingTop(5).Text(candidato.Nombre).FontSize(18).FontColor(Colors.White);
+                column.Item().Text($"Vacante: {candidato.Puesto}").FontSize(14).FontColor(Colors.Blue.Lighten4);
             });
 
-            row.ConstantItem(100).Height(50).Placeholder(); // Placeholder para logo de la empresa (White-labeling futuro)
+            row.ConstantItem(150).AlignRight().Column(column => 
+            {
+                column.Item().Text("Generado el:").FontSize(10).FontColor(Colors.Blue.Lighten4).AlignRight();
+                column.Item().Text(DateTime.Now.ToString("dd/MM/yyyy")).FontSize(12).SemiBold().FontColor(Colors.White).AlignRight();
+                
+                var score = Calculos.ScoreCandidato(candidato);
+                if (score.disponible)
+                {
+                    var colorSemaforo = score.semaforo switch {
+                        "verde" => Colors.Green.Darken1,
+                        "amarillo" => Colors.Yellow.Darken2,
+                        "naranja" => Colors.Orange.Darken1,
+                        "rojo" => Colors.Red.Darken1,
+                        _ => Colors.Grey.Lighten2
+                    };
+                    column.Item().PaddingTop(10)
+                          .Background(colorSemaforo)
+                          .PaddingVertical(5).PaddingHorizontal(10)
+                          .Text($"{score.general:0.0} / 10")
+                          .FontSize(14).SemiBold().FontColor(Colors.White).AlignCenter();
+                          
+                    column.Item().PaddingTop(2)
+                          .Text(score.etiqueta)
+                          .FontSize(10).SemiBold().FontColor(colorSemaforo).AlignRight();
+                }
+            });
         });
     }
 
@@ -72,79 +87,105 @@ public class PdfReportService : IPdfReportService
     {
         var respondidas = candidato.Referencias.Where(r => r.Estatus == "Respondida").ToList();
         
-        container.PaddingVertical(1, Unit.Centimetre).Column(column =>
+        container.Column(column =>
         {
-            column.Spacing(20);
+            column.Spacing(25);
 
-            // Resumen Ejecutivo
-            column.Item().Text("Resumen Ejecutivo").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
-            column.Item().Table(table =>
+            // KPI Cards (Resumen Ejecutivo)
+            column.Item().Text("Resumen Ejecutivo").FontSize(16).SemiBold().FontColor(Colors.Blue.Darken3);
+            
+            column.Item().Row(row =>
             {
-                table.ColumnsDefinition(columns =>
+                row.Spacing(15);
+                
+                // KPI 1
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Blue.Darken2).Padding(15).Column(c =>
                 {
-                    columns.RelativeColumn();
-                    columns.RelativeColumn();
-                    columns.RelativeColumn();
+                    c.Item().Text("Total Referencias").FontSize(11).FontColor(Colors.Grey.Darken2);
+                    c.Item().Text(candidato.Referencias.Count.ToString()).FontSize(22).SemiBold().FontColor(Colors.Blue.Darken3);
                 });
 
-                table.Header(header =>
+                // KPI 2
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Green.Darken2).Padding(15).Column(c =>
                 {
-                    header.Cell().Element(CellStyle).Text("Total Referencias");
-                    header.Cell().Element(CellStyle).Text("Respondidas");
-                    header.Cell().Element(CellStyle).Text("Avance");
-
-                    static IContainer CellStyle(IContainer container)
-                    {
-                        return container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
-                    }
+                    c.Item().Text("Respondidas").FontSize(11).FontColor(Colors.Grey.Darken2);
+                    c.Item().Text(respondidas.Count.ToString()).FontSize(22).SemiBold().FontColor(Colors.Green.Darken3);
                 });
 
-                table.Cell().Element(CellStyle).Text(candidato.Referencias.Count.ToString());
-                table.Cell().Element(CellStyle).Text(respondidas.Count.ToString());
+                // KPI 3
                 var avance = candidato.Referencias.Count == 0 ? 0 : (int)Math.Round(100.0 * respondidas.Count / candidato.Referencias.Count);
-                table.Cell().Element(CellStyle).Text($"{avance}%");
-
-                static IContainer CellStyle(IContainer container)
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Orange.Darken2).Padding(15).Column(c =>
                 {
-                    return container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
-                }
+                    c.Item().Text("Avance").FontSize(11).FontColor(Colors.Grey.Darken2);
+                    c.Item().Text($"{avance}%").FontSize(22).SemiBold().FontColor(Colors.Orange.Darken3);
+                });
             });
 
             // Detalle por referencia
-            column.Item().Text("Detalle de Referencias").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
+            column.Item().Text("Detalle de Referencias").FontSize(16).SemiBold().FontColor(Colors.Blue.Darken3);
+
+            if(respondidas.Count == 0)
+            {
+                column.Item().Background(Colors.Grey.Lighten4).Padding(15).Text("Aún no hay referencias respondidas para generar el detalle.").Italic().FontColor(Colors.Grey.Darken1);
+            }
 
             foreach (var r in respondidas)
             {
-                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(refCol =>
+                var recon = (r.Recontrataria ?? false) ? "Sí" : "No";
+                var reconColor = (r.Recontrataria ?? false) ? Colors.Green.Darken2 : Colors.Red.Darken2;
+
+                column.Item().Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2).Column(refCol =>
                 {
-                    refCol.Spacing(5);
-                    refCol.Item().Text(text =>
+                    // Card Header
+                    refCol.Item().Background(Colors.Grey.Lighten4).Padding(12).Row(rRow => 
                     {
-                        text.Span(r.NombreReferente).SemiBold().FontSize(12);
-                        text.Span($" - {r.Empresa} ({r.Relacion})");
+                        rRow.RelativeItem().Text(text =>
+                        {
+                            text.Span(r.NombreReferente).SemiBold().FontSize(13).FontColor(Colors.Black);
+                            text.Span($" — {r.PuestoReferente}, {r.Empresa}").FontSize(11).FontColor(Colors.Grey.Darken2);
+                        });
+                        rRow.ConstantItem(120).AlignRight().Text($"Relación: {r.Relacion}").FontSize(10).FontColor(Colors.Grey.Darken1).AlignRight();
                     });
 
-                    refCol.Item().Text(text => { text.Span("Responsabilidad: ").SemiBold(); text.Span($"{r.Responsabilidad}/10"); });
-                    refCol.Item().Text(text => { text.Span("Trabajo en Equipo: ").SemiBold(); text.Span($"{r.TrabajoEquipo}/10"); });
-                    refCol.Item().Text(text => { text.Span("Liderazgo: ").SemiBold(); text.Span($"{r.Liderazgo}/10"); });
-                    
-                    if (!string.IsNullOrEmpty(r.Fortalezas))
+                    // Card Body
+                    refCol.Item().Padding(12).Column(body => 
                     {
-                        refCol.Item().PaddingTop(5).Text(text => { text.Span("Fortalezas: ").SemiBold(); text.Span(r.Fortalezas); });
-                    }
-                    if (!string.IsNullOrEmpty(r.AreasOportunidad))
-                    {
-                        refCol.Item().Text(text => { text.Span("Áreas de Oportunidad: ").SemiBold(); text.Span(r.AreasOportunidad); });
-                    }
-                    
-                    var recon = (r.Recontrataria ?? false) ? "Sí" : "No";
-                    refCol.Item().PaddingTop(5).Text(text => { text.Span("¿Recontrataría?: ").SemiBold().FontColor(Colors.Orange.Darken2); text.Span(recon); });
+                        body.Spacing(8);
+                        
+                        // Calificaciones en grid
+                        body.Item().Row(grid => 
+                        {
+                            grid.Spacing(10);
+                            grid.RelativeItem().Column(c => { c.Item().Text("Responsabilidad").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.Responsabilidad:0.0}/10").SemiBold(); });
+                            grid.RelativeItem().Column(c => { c.Item().Text("Trabajo en Equipo").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.TrabajoEquipo:0.0}/10").SemiBold(); });
+                            grid.RelativeItem().Column(c => { c.Item().Text("Comunicación").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.Comunicacion:0.0}/10").SemiBold(); });
+                            grid.RelativeItem().Column(c => { c.Item().Text("Liderazgo").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.Liderazgo:0.0}/10").SemiBold(); });
+                            grid.RelativeItem().Column(c => { c.Item().Text("Integridad").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.Integridad:0.0}/10").SemiBold(); });
+                            grid.RelativeItem().Column(c => { c.Item().Text("Técnico").FontSize(9).FontColor(Colors.Grey.Medium); c.Item().Text($"{r.ConocimientoTecnico:0.0}/10").SemiBold(); });
+                        });
+
+                        body.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
+
+                        // Textos
+                        if (!string.IsNullOrEmpty(r.Fortalezas))
+                        {
+                            body.Item().Text(text => { text.Span("Fortalezas: ").SemiBold().FontSize(10); text.Span(r.Fortalezas).FontSize(10); });
+                        }
+                        if (!string.IsNullOrEmpty(r.AreasOportunidad))
+                        {
+                            body.Item().Text(text => { text.Span("Áreas de Oportunidad: ").SemiBold().FontSize(10); text.Span(r.AreasOportunidad).FontSize(10); });
+                        }
+                        if (!string.IsNullOrEmpty(r.Comentarios))
+                        {
+                            body.Item().Text(text => { text.Span("Comentarios adicionales: ").SemiBold().FontSize(10); text.Span($"\"{r.Comentarios}\"").Italic().FontSize(10).FontColor(Colors.Grey.Darken2); });
+                        }
+                        
+                        body.Item().PaddingTop(4).Text(text => { 
+                            text.Span("¿Lo volvería a contratar?: ").SemiBold().FontSize(11); 
+                            text.Span(recon).SemiBold().FontSize(11).FontColor(reconColor); 
+                        });
+                    });
                 });
-            }
-            
-            if(respondidas.Count == 0)
-            {
-                column.Item().Text("Aún no hay referencias respondidas para generar el detalle.").Italic();
             }
         });
     }
@@ -156,18 +197,18 @@ public class PdfReportService : IPdfReportService
             container.Page(page =>
             {
                 page.Size(PageSizes.A4);
-                page.Margin(2, Unit.Centimetre);
+                page.Margin(0);
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(11).FontFamily(Fonts.Arial));
 
                 page.Header().Element(ComposeGlobalHeader);
-                page.Content().Element(c => ComposeGlobalContent(c, stats));
-                page.Footer().AlignCenter().Text(x =>
+                page.Content().Padding(2, Unit.Centimetre).Element(c => ComposeGlobalContent(c, stats));
+                page.Footer().PaddingHorizontal(2, Unit.Centimetre).PaddingBottom(1, Unit.Centimetre).AlignCenter().Text(x =>
                 {
-                    x.Span("Página ");
-                    x.CurrentPageNumber();
-                    x.Span(" de ");
-                    x.TotalPages();
+                    x.Span("Página ").FontColor(Colors.Grey.Medium);
+                    x.CurrentPageNumber().FontColor(Colors.Grey.Medium);
+                    x.Span(" de ").FontColor(Colors.Grey.Medium);
+                    x.TotalPages().FontColor(Colors.Grey.Medium);
                 });
             });
         });
@@ -177,61 +218,60 @@ public class PdfReportService : IPdfReportService
 
     private void ComposeGlobalHeader(IContainer container)
     {
-        var titleStyle = TextStyle.Default.FontSize(20).SemiBold().FontColor(Colors.Blue.Darken2);
-        container.Row(row =>
+        container.Background(Colors.Blue.Darken3).Padding(2, Unit.Centimetre).PaddingVertical(1.5f, Unit.Centimetre).Row(row =>
         {
             row.RelativeItem().Column(column =>
             {
-                column.Item().Text("Reporte Consolidado Global").Style(titleStyle);
-                column.Item().Text(text =>
-                {
-                    text.Span("Fecha de Generación: ").SemiBold();
-                    text.Span(DateTime.Now.ToString("dd/MM/yyyy"));
-                });
+                column.Item().Text("Reporte Consolidado Global").FontSize(24).SemiBold().FontColor(Colors.White);
+                column.Item().PaddingTop(5).Text("Métricas y Análisis de Referencias").FontSize(14).FontColor(Colors.Blue.Lighten4);
             });
-            row.ConstantItem(100).Height(50).Placeholder(); // Placeholder para logo de la empresa
+            row.ConstantItem(150).AlignRight().Column(column => 
+            {
+                column.Item().Text("Generado el:").FontSize(10).FontColor(Colors.Blue.Lighten4).AlignRight();
+                column.Item().Text(DateTime.Now.ToString("dd/MM/yyyy")).FontSize(12).SemiBold().FontColor(Colors.White).AlignRight();
+            });
         });
     }
 
     private void ComposeGlobalContent(IContainer container, DashboardStatsDto stats)
     {
-        container.PaddingVertical(1, Unit.Centimetre).Column(column =>
+        container.Column(column =>
         {
-            column.Spacing(20);
+            column.Spacing(25);
 
-            // Row 1: KPI Cards (Candidatos, Recontratacion, Tiempo)
+            // Row 1: KPI Cards
             column.Item().Row(row =>
             {
                 row.Spacing(15);
                 
                 // KPI 1
-                row.RelativeItem().Background(Colors.Grey.Lighten4).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(c =>
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Blue.Darken2).Padding(15).Column(c =>
                 {
                     c.Item().Text("Promedio Global").FontSize(12).FontColor(Colors.Grey.Darken2);
-                    c.Item().Text($"{stats.PromedioGeneral:0.0} / 10").FontSize(24).SemiBold().FontColor(Colors.Blue.Darken2);
+                    c.Item().Text($"{stats.PromedioGeneral:0.0} / 10").FontSize(26).SemiBold().FontColor(Colors.Blue.Darken3);
                     c.Item().PaddingTop(5).Text($"{stats.TotalCandidatos} candidatos").FontSize(10).FontColor(Colors.Grey.Medium);
                 });
 
                 // KPI 2
-                row.RelativeItem().Background(Colors.Grey.Lighten4).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(c =>
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Green.Darken2).Padding(15).Column(c =>
                 {
-                    c.Item().Text("Índice de Recontratación").FontSize(12).FontColor(Colors.Grey.Darken2);
-                    c.Item().Text($"{stats.PorcentajeRecontratacion}%").FontSize(24).SemiBold().FontColor(Colors.Blue.Darken2);
+                    c.Item().Text("Índice Recontratación").FontSize(12).FontColor(Colors.Grey.Darken2);
+                    c.Item().Text($"{stats.PorcentajeRecontratacion}%").FontSize(26).SemiBold().FontColor(Colors.Green.Darken3);
                     c.Item().PaddingTop(5).Text("De los que tienen score").FontSize(10).FontColor(Colors.Grey.Medium);
                 });
 
                 // KPI 3
-                row.RelativeItem().Background(Colors.Grey.Lighten4).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(c =>
+                row.RelativeItem().Background(Colors.Grey.Lighten4).BorderTop(4).BorderColor(Colors.Orange.Darken2).Padding(15).Column(c =>
                 {
                     c.Item().Text("Tiempo Promedio").FontSize(12).FontColor(Colors.Grey.Darken2);
                     var dias = stats.TiempoPromedioDias.HasValue ? $"{stats.TiempoPromedioDias.Value:0.0} días" : "N/A";
-                    c.Item().Text(dias).FontSize(24).SemiBold().FontColor(Colors.Orange.Darken1);
+                    c.Item().Text(dias).FontSize(26).SemiBold().FontColor(Colors.Orange.Darken3);
                     c.Item().PaddingTop(5).Text("De respuesta").FontSize(10).FontColor(Colors.Grey.Medium);
                 });
             });
 
             // Risk Distribution
-            column.Item().PaddingTop(10).Text("Análisis de Riesgo General").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
+            column.Item().Text("Análisis de Riesgo General").FontSize(16).SemiBold().FontColor(Colors.Blue.Darken3);
             
             column.Item().Row(row => 
             {
@@ -239,73 +279,83 @@ public class PdfReportService : IPdfReportService
                 var total = stats.RiesgoBajo + stats.RiesgoMedio + stats.RiesgoAlto;
                 total = total > 0 ? total : 1;
 
-                row.RelativeItem().Background(Colors.Green.Lighten5).Border(1).BorderColor(Colors.Green.Lighten2).Padding(10).Column(c =>
+                row.RelativeItem().Background(Colors.Green.Lighten5).Border(1).BorderColor(Colors.Green.Lighten3).Padding(15).Column(c =>
                 {
-                    c.Item().Text("Bajo Riesgo").FontSize(12).SemiBold().FontColor(Colors.Green.Darken3);
-                    c.Item().Text($"{stats.RiesgoBajo} candidatos").FontSize(16).FontColor(Colors.Green.Darken2);
-                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoBajo / total)}%").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    c.Item().Text("Bajo Riesgo").FontSize(13).SemiBold().FontColor(Colors.Green.Darken3);
+                    c.Item().PaddingTop(5).Text($"{stats.RiesgoBajo} candidatos").FontSize(18).SemiBold().FontColor(Colors.Green.Darken2);
+                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoBajo / total)}% del total").FontSize(11).FontColor(Colors.Green.Darken1);
                 });
 
-                row.RelativeItem().Background(Colors.Yellow.Lighten5).Border(1).BorderColor(Colors.Yellow.Lighten2).Padding(10).Column(c =>
+                row.RelativeItem().Background(Colors.Yellow.Lighten5).Border(1).BorderColor(Colors.Yellow.Lighten3).Padding(15).Column(c =>
                 {
-                    c.Item().Text("Riesgo Medio").FontSize(12).SemiBold().FontColor(Colors.Orange.Darken2);
-                    c.Item().Text($"{stats.RiesgoMedio} candidatos").FontSize(16).FontColor(Colors.Orange.Darken2);
-                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoMedio / total)}%").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    c.Item().Text("Riesgo Medio").FontSize(13).SemiBold().FontColor(Colors.Orange.Darken3);
+                    c.Item().PaddingTop(5).Text($"{stats.RiesgoMedio} candidatos").FontSize(18).SemiBold().FontColor(Colors.Orange.Darken2);
+                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoMedio / total)}% del total").FontSize(11).FontColor(Colors.Orange.Darken1);
                 });
 
-                row.RelativeItem().Background(Colors.Red.Lighten5).Border(1).BorderColor(Colors.Red.Lighten2).Padding(10).Column(c =>
+                row.RelativeItem().Background(Colors.Red.Lighten5).Border(1).BorderColor(Colors.Red.Lighten3).Padding(15).Column(c =>
                 {
-                    c.Item().Text("Alto Riesgo").FontSize(12).SemiBold().FontColor(Colors.Red.Darken2);
-                    c.Item().Text($"{stats.RiesgoAlto} candidatos").FontSize(16).FontColor(Colors.Red.Darken2);
-                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoAlto / total)}%").FontSize(10).FontColor(Colors.Grey.Darken1);
+                    c.Item().Text("Alto Riesgo").FontSize(13).SemiBold().FontColor(Colors.Red.Darken3);
+                    c.Item().PaddingTop(5).Text($"{stats.RiesgoAlto} candidatos").FontSize(18).SemiBold().FontColor(Colors.Red.Darken2);
+                    c.Item().Text($"{Math.Round(100.0 * stats.RiesgoAlto / total)}% del total").FontSize(11).FontColor(Colors.Red.Darken1);
                 });
             });
 
-            // Promedio por Competencias
-            if (stats.CompetenciasGlobales != null && stats.CompetenciasGlobales.Any())
+            // Promedio por Competencias y Funnel
+            column.Item().Row(row => 
             {
-                column.Item().PaddingTop(10).Text("Promedio de Competencias (Top 3)").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
-                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(compCol =>
+                row.Spacing(20);
+
+                // Columna izquierda: Eficiencia
+                row.RelativeItem().Column(c => 
                 {
-                    compCol.Spacing(10);
-                    var top3 = stats.CompetenciasGlobales.Take(3).ToList();
-                    foreach (var c in top3)
+                    c.Item().Text("Eficiencia de Referencias").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken3);
+                    c.Item().PaddingTop(10).Background(Colors.Grey.Lighten4).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(inner => 
                     {
-                        compCol.Item().Row(r =>
+                        inner.Item().Text("Tasa de Conversión (Enviadas vs Recibidas)").SemiBold().FontSize(11);
+                        inner.Item().PaddingTop(10).Row(r => 
                         {
-                            r.RelativeItem().Text(c.Nombre).FontSize(12).SemiBold().FontColor(Colors.Grey.Darken3);
-                            r.ConstantItem(50).AlignRight().Text($"{c.Promedio:0.0}/10").FontSize(12).SemiBold().FontColor(Colors.Blue.Darken2);
+                            var conversion = stats.ReferenciasEnviadas > 0 ? (float)stats.ReferenciasRecibidas / stats.ReferenciasEnviadas : 0f;
+                            if (conversion > 0)
+                                r.RelativeItem(conversion).Height(15).Background(Colors.Green.Medium);
+                            if (conversion < 1)
+                                r.RelativeItem(1f - conversion).Height(15).Background(Colors.Grey.Lighten2);
                         });
-                        compCol.Item().Height(8).Background(Colors.Grey.Lighten3).Row(r =>
+                        inner.Item().PaddingTop(8).Text($"Enviadas: {stats.ReferenciasEnviadas} | Recibidas: {stats.ReferenciasRecibidas}").FontSize(10).FontColor(Colors.Grey.Darken2);
+                        inner.Item().Text($"Pendientes: {stats.ReferenciasPendientes}").FontSize(10).FontColor(Colors.Grey.Darken2);
+                    });
+                });
+
+                // Columna derecha: Top competencias
+                row.RelativeItem().Column(c => 
+                {
+                    if (stats.CompetenciasGlobales != null && stats.CompetenciasGlobales.Any())
+                    {
+                        c.Item().Text("Top Competencias").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken3);
+                        c.Item().PaddingTop(10).Background(Colors.White).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(compCol =>
                         {
-                            r.RelativeItem((float)(c.Promedio)).Background(Colors.Blue.Darken2);
-                            r.RelativeItem((float)(10.0 - c.Promedio)).Background(Colors.Transparent);
+                            compCol.Spacing(10);
+                            var top3 = stats.CompetenciasGlobales.Take(3).ToList();
+                            foreach (var comp in top3)
+                            {
+                                compCol.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text(comp.Nombre).FontSize(11).SemiBold().FontColor(Colors.Grey.Darken3);
+                                    r.ConstantItem(40).AlignRight().Text($"{comp.Promedio:0.0}").FontSize(11).SemiBold().FontColor(Colors.Blue.Darken2);
+                                });
+                                compCol.Item().Height(6).Background(Colors.Grey.Lighten3).Row(r =>
+                                {
+                                    r.RelativeItem((float)(comp.Promedio)).Background(Colors.Blue.Darken2);
+                                    r.RelativeItem((float)(10.0 - comp.Promedio)).Background(Colors.Transparent);
+                                });
+                            }
                         });
                     }
-                });
-            }
-
-            // Conversion and Funnel
-            column.Item().PaddingTop(10).Text("Eficiencia de Referencias").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
-            column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Row(row =>
-            {
-                row.RelativeItem().Column(c =>
-                {
-                    c.Item().Text("Tasa de Conversión (Enviadas vs Recibidas)").SemiBold();
-                    c.Item().PaddingTop(10).Row(r => 
-                    {
-                        var conversion = stats.ReferenciasEnviadas > 0 ? (float)stats.ReferenciasRecibidas / stats.ReferenciasEnviadas : 0f;
-                        if (conversion > 0)
-                            r.RelativeItem(conversion).Height(15).Background(Colors.Orange.Medium);
-                        if (conversion < 1)
-                            r.RelativeItem(1f - conversion).Height(15).Background(Colors.Grey.Lighten2);
-                    });
-                    c.Item().PaddingTop(5).Text($"Enviadas: {stats.ReferenciasEnviadas} | Recibidas: {stats.ReferenciasRecibidas} | Pendientes: {stats.ReferenciasPendientes}").FontSize(10).FontColor(Colors.Grey.Darken2);
                 });
             });
 
             // Overall Funnel
-            column.Item().PaddingTop(10).Text("Estado de los Procesos").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
+            column.Item().Text("Estado de los Procesos").FontSize(16).SemiBold().FontColor(Colors.Blue.Darken3);
             column.Item().Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -321,14 +371,14 @@ public class PdfReportService : IPdfReportService
                     header.Cell().Element(CellStyle).Text("Procesos en Curso");
                     header.Cell().Element(CellStyle).Text("Procesos Concluidos");
 
-                    static IContainer CellStyle(IContainer container) => container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
+                    static IContainer CellStyle(IContainer container) => container.Background(Colors.Blue.Darken3).Padding(8).DefaultTextStyle(x => x.SemiBold().FontColor(Colors.White));
                 });
 
                 table.Cell().Element(CellStyle).Text(stats.TotalCandidatos.ToString());
                 table.Cell().Element(CellStyle).Text(stats.ProcesosEnCurso.ToString());
                 table.Cell().Element(CellStyle).Text(stats.ProcesosConcluidos.ToString());
 
-                static IContainer CellStyle(IContainer container) => container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).PaddingVertical(5);
+                static IContainer CellStyle(IContainer container) => container.BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(8);
             });
         });
     }

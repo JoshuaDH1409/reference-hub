@@ -136,7 +136,9 @@ public static class DatosIniciales
         }
         db.SaveChanges();
 
-        if (db.Candidatos.Count() >= 10) return;
+        var totalExistentes = db.Candidatos.Count();
+        if (totalExistentes >= 150) return;
+        var faltantes = 150 - totalExistentes;
 
         var rand = new Random();
         var hoy = DateTime.Now;
@@ -146,8 +148,8 @@ public static class DatosIniciales
         var empresas = new[] { "Grupo Alfa", "Industrias Delta", "Comercial MX", "Consultores BETA", "Tech Solutions", "Finanzas Global", "Global Corp", "Innovación SA", "Latam Tech", "Servicios Omega" };
 
         var nuevosCandidatos = new List<Candidato>();
-        // Generate 150 candidates for a rich realistic graph
-        for (int i = 0; i < 150; i++)
+        // Generate missing candidates for a rich realistic graph
+        for (int i = 0; i < faltantes; i++)
         {
             var weight = rand.NextDouble();
             // 50% in last 30 days, 30% in 30-90 days, 20% in 90-360 days (creates peaks and valleys)
