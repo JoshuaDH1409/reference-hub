@@ -23,7 +23,7 @@ function LayoutAdmin({ children }) {
         <div className="theme-brand">
           <div className="theme-brand-mark">RH</div>
           <div className="theme-brand-text">
-            <strong>Reference Hub</strong>
+            <strong>Referencia AI</strong>
             <span>Talent · References</span>
           </div>
         </div>
@@ -116,7 +116,7 @@ function LayoutAdmin({ children }) {
         </nav>
         
         <div className="theme-sidebar-footer">
-          <div><strong>Product:</strong> Reference Hub</div>
+          <div><strong>Product:</strong> Referencia AI</div>
           <div style={{ marginTop: '6px' }}>
             <Link to="/login" style={{ color: 'rgba(234, 242, 245, 0.8)' }}>Cerrar sesión</Link>
           </div>

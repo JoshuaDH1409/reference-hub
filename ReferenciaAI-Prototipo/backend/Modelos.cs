@@ -134,6 +134,8 @@ public record RespuestaDto(
     string? AreasOportunidad,
     string? Comentarios);
 
+public record CompetenciaGlobalDto(string Nombre, double Promedio);
+
 public record DashboardStatsDto(
     int TotalCandidatos,
     int ProcesosEnCurso,
@@ -146,7 +148,8 @@ public record DashboardStatsDto(
     int RiesgoBajo,
     int RiesgoMedio,
     int RiesgoAlto,
-    int PorcentajeRecontratacion
+    int PorcentajeRecontratacion,
+    List<CompetenciaGlobalDto> CompetenciasGlobales
 );
 
 public record ScoreResult(

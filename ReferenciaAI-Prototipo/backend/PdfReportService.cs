@@ -261,6 +261,30 @@ public class PdfReportService : IPdfReportService
                 });
             });
 
+            // Promedio por Competencias
+            if (stats.CompetenciasGlobales != null && stats.CompetenciasGlobales.Any())
+            {
+                column.Item().PaddingTop(10).Text("Promedio de Competencias (Top 3)").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
+                column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Column(compCol =>
+                {
+                    compCol.Spacing(10);
+                    var top3 = stats.CompetenciasGlobales.Take(3).ToList();
+                    foreach (var c in top3)
+                    {
+                        compCol.Item().Row(r =>
+                        {
+                            r.RelativeItem().Text(c.Nombre).FontSize(12).SemiBold().FontColor(Colors.Grey.Darken3);
+                            r.ConstantItem(50).AlignRight().Text($"{c.Promedio:0.0}/10").FontSize(12).SemiBold().FontColor(Colors.Blue.Darken2);
+                        });
+                        compCol.Item().Height(8).Background(Colors.Grey.Lighten3).Row(r =>
+                        {
+                            r.RelativeItem((float)(c.Promedio)).Background(Colors.Blue.Darken2);
+                            r.RelativeItem((float)(10.0 - c.Promedio)).Background(Colors.Transparent);
+                        });
+                    }
+                });
+            }
+
             // Conversion and Funnel
             column.Item().PaddingTop(10).Text("Eficiencia de Referencias").FontSize(14).SemiBold().FontColor(Colors.Blue.Darken2);
             column.Item().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(15).Row(row =>

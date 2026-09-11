@@ -50,15 +50,13 @@ export default function Reportes() {
 
   const candidatosValidos = datos.candidatos.filter(c => c.score && c.score.disponible);
   
-  const avgScore = candidatosValidos.length > 0 
-    ? (candidatosValidos.reduce((acc, c) => acc + c.score.general, 0) / candidatosValidos.length)
-    : 8.5; // Valor demo si no hay válidos
-  
-  const competencias = [
-    { nombre: 'Trabajo en Equipo', score: Math.min(avgScore + 0.7, 10).toFixed(1) },
-    { nombre: 'Responsabilidad', score: Math.min(avgScore + 0.3, 10).toFixed(1) },
-    { nombre: 'Comunicación', score: Math.max(avgScore - 0.1, 0).toFixed(1) }
-  ];
+  const competencias = datos.competencias && datos.competencias.length > 0
+    ? datos.competencias.slice(0, 3).map(c => ({ nombre: c.nombre, score: c.promedio.toFixed(1) }))
+    : [
+        { nombre: 'Trabajo en Equipo', score: '0.0' },
+        { nombre: 'Responsabilidad', score: '0.0' },
+        { nombre: 'Comunicación', score: '0.0' }
+      ];
 
   const recontratables = candidatosValidos.length > 0 ? candidatosValidos.filter(c => c.score.general >= 7).length : 25;
   const totalConcluidos = candidatosValidos.length > 0 ? candidatosValidos.length : 30;

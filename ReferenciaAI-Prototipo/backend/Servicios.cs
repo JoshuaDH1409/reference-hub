@@ -70,6 +70,25 @@ public static class Calculos
         );
     }
 
+    /// <summary>Calcula el promedio global de las competencias a partir de las referencias respondidas.</summary>
+    public static List<CompetenciaGlobalDto> GetCompetenciasGlobales(List<Referencia> respondidas)
+    {
+        var competenciasGlobales = new List<CompetenciaGlobalDto>();
+        if (!respondidas.Any()) return competenciasGlobales;
+
+        double Prom(Func<Referencia, double?> sel) =>
+            Math.Round(respondidas.Where(r => sel(r).HasValue).Select(r => sel(r)!.Value).DefaultIfEmpty(0).Average(), 1);
+
+        competenciasGlobales.Add(new("Trabajo en Equipo", Prom(r => r.TrabajoEquipo)));
+        competenciasGlobales.Add(new("Responsabilidad", Prom(r => r.Responsabilidad)));
+        competenciasGlobales.Add(new("Comunicación", Prom(r => r.Comunicacion)));
+        competenciasGlobales.Add(new("Liderazgo", Prom(r => r.Liderazgo)));
+        competenciasGlobales.Add(new("Integridad", Prom(r => r.Integridad)));
+        competenciasGlobales.Add(new("Conocimiento Técnico", Prom(r => r.ConocimientoTecnico)));
+
+        return competenciasGlobales.OrderByDescending(c => c.Promedio).ToList();
+    }
+
     /// <summary>Resume los textos libres (fortalezas / áreas de oportunidad) en los temas más mencionados.</summary>
     public static List<string> ResumenTemas(IEnumerable<string?> textos, int maximo = 6)
     {
@@ -120,32 +139,59 @@ public static class Notificaciones
                 $"<strong>{c.Nombre}</strong> lo(a) ha señalado como referencia laboral dentro de un proceso de evaluación para la vacante de <strong>{c.Puesto}</strong>.",
                 "Le agradeceremos responder un breve cuestionario confidencial (le tomará menos de 5 minutos).",
                 enlace,
-                "Completar Referencia"
+                "Completar Referencia",
+                "#0b1f38"
             )
         };
     }
 
-    public static CorreoSimulado CorreoRecordatorio(Candidato c, Referencia r)
+    public static CorreoSimulado CorreoRecordatorio(Candidato c, Referencia r, int intento = 1)
     {
         var enlace = $"{UrlBaseFrontend}/responder/{r.Token}";
+        
+        string asunto, parrafo1, parrafo2, colorCabecera;
+        
+        switch (intento)
+        {
+            case 1:
+                asunto = $"Recordatorio amistoso: Referencia laboral de {c.Nombre}";
+                parrafo1 = $"Le escribimos amablemente para recordarle que tiene pendiente responder el cuestionario de referencia laboral de <strong>{c.Nombre}</strong>.";
+                parrafo2 = "Sabemos que está ocupado(a), pero su respuesta es muy valiosa para el proceso. Solo le tomará unos minutos.";
+                colorCabecera = "#0b1f38"; // Azul marino (amigable/institucional)
+                break;
+            case 2:
+                asunto = $"Importante: Proceso detenido esperando su referencia de {c.Nombre}";
+                parrafo1 = $"Hemos intentado contactarlo anteriormente. El proceso de selección de <strong>{c.Nombre}</strong> se encuentra <strong>detenido</strong> a la espera de su respuesta.";
+                parrafo2 = "Por favor, tómese 5 minutos para completar la referencia y ayudar al candidato a avanzar en su postulación.";
+                colorCabecera = "#eab308"; // Amarillo oscuro/Naranja (Precaución)
+                break;
+            default: // 3 o más
+                asunto = $"ÚLTIMO AVISO: Referencia requerida para {c.Nombre}";
+                parrafo1 = $"Este es nuestro <strong>último intento de contacto</strong>. Sin su referencia, el perfil de <strong>{c.Nombre}</strong> quedará incompleto, lo que podría afectar seriamente su oportunidad para la vacante de {c.Puesto}.";
+                parrafo2 = "Le urgimos a contestar el cuestionario a la brevedad posible.";
+                colorCabecera = "#dc2626"; // Rojo (Urgente)
+                break;
+        }
+
         return new CorreoSimulado
         {
             Para = r.Email,
             Tipo = "Recordatorio",
             CandidatoId = c.Id,
             ReferenciaId = r.Id,
-            Asunto = $"Recordatorio urgente: Referencia laboral pendiente — {c.Nombre}",
+            Asunto = asunto,
             Cuerpo = GenerarPlantillaHtml(
                 r.NombreReferente,
-                $"Le recordamos amablemente que tiene pendiente responder el cuestionario de referencia laboral de <strong>{c.Nombre}</strong>.",
-                "Su respuesta es muy importante para que el candidato pueda continuar con su proceso de selección. Le tomará menos de 5 minutos.",
+                parrafo1,
+                parrafo2,
                 enlace,
-                "Completar Referencia Ahora"
+                "Completar Referencia Ahora",
+                colorCabecera
             )
         };
     }
 
-    private static string GenerarPlantillaHtml(string nombre, string parrafo1, string parrafo2, string enlace, string textoBoton)
+    private static string GenerarPlantillaHtml(string nombre, string parrafo1, string parrafo2, string enlace, string textoBoton, string headerColor = "#0b1f38")
     {
         return $@"
 <!DOCTYPE html>
@@ -156,7 +202,7 @@ public static class Notificaciones
 </head>
 <body style=""font-family: Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: #334155;"">
     <div style=""max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"">
-        <div style=""background-color: #0b1f38; color: #ffffff; padding: 20px; text-align: center;"">
+        <div style=""background-color: {headerColor}; color: #ffffff; padding: 20px; text-align: center;"">
             <h1 style=""margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;"">Referencia AI</h1>
         </div>
         <div style=""padding: 30px; line-height: 1.6;"">

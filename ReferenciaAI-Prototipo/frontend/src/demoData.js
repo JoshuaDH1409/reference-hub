@@ -55,7 +55,7 @@ export const DEMO_CANDIDATOS = [
       },
     ],
     timeline: [
-      { id: 1, fecha: dias(5), titulo: 'Candidato registrado', detalle: 'Alta en Reference Hub.', icono: 'person_add' },
+      { id: 1, fecha: dias(5), titulo: 'Candidato registrado', detalle: 'Alta en Referencia AI.', icono: 'person_add' },
       { id: 2, fecha: dias(5), titulo: 'Invitaciones enviadas', detalle: '3 correos a referentes.', icono: 'mail' },
       { id: 3, fecha: dias(2), titulo: 'Respuestas recibidas', detalle: 'Cuestionarios completados.', icono: 'mark_email_read' },
     ],
@@ -235,7 +235,7 @@ export function demoCorreos() {
       para: 'laura@empresa.com',
       fecha: dias(4),
       cuerpo:
-        'Hola Laura,\n\nAna Martínez te designó como referencia para Gerente de Finanzas.\nResponde el cuestionario desde Reference Hub.\n\nSaludos',
+        'Hola Laura,\n\nAna Martínez te designó como referencia para Gerente de Finanzas.\nResponde el cuestionario desde Referencia AI.\n\nSaludos',
     },
     {
       id: '2',

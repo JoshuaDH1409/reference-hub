@@ -52,7 +52,7 @@ export default function Dashboard() {
         <div>
           <div className="theme-eyebrow">Dashboards › Analytics</div>
           <h1>Analítica de referencias y talento</h1>
-          <div className="theme-subtitle">Panel analítico de Reference Hub: métricas, KPIs y semáforo de riesgo sobre referencias laborales.</div>
+          <div className="theme-subtitle">Panel analítico de Referencia AI: métricas, KPIs y semáforo de riesgo sobre referencias laborales.</div>
         </div>
         <button className="theme-cta" onClick={() => navegar('/reportes')}>
           <svg className="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M5 20h14" /></svg>

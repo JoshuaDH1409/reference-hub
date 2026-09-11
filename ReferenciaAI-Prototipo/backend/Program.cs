@@ -7,13 +7,21 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Hangfire;
 using Hangfire.SqlServer;
+using Hangfire.MemoryStorage;
 
 // ... (top of file remains) ...
 
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDb>(o => o.UseSqlServer(connectionString));
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDbContext<AppDb>(o => o.UseSqlite("Data Source=referencia_ai.db"));
+}
+else
+{
+    builder.Services.AddDbContext<AppDb>(o => o.UseSqlServer(connectionString));
+}
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
@@ -35,13 +43,22 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IPdfReportService, PdfReportService>();
 
-// Configuración de Hangfire (Fase 0: Local con MemoryStorage)
-// NOTA: Para producción, cambiar UseMemoryStorage() por UseSqlServerStorage("ConexionSQL") o UsePostgreSqlStorage("ConexionPG")
-builder.Services.AddHangfire(configuration => configuration
-    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-    .UseSimpleAssemblyNameTypeSerializer()
-    .UseRecommendedSerializerSettings()
-    .UseSqlServerStorage(connectionString));
+// Configuración de Hangfire
+builder.Services.AddHangfire(configuration => {
+    configuration
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        configuration.UseMemoryStorage();
+    }
+    else
+    {
+        configuration.UseSqlServerStorage(connectionString);
+    }
+});
 
 // Iniciar el servidor de Hangfire
 builder.Services.AddHangfireServer();
@@ -50,6 +67,14 @@ var app = builder.Build();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Crear base de datos (Migraciones) y sembrar datos
+using (var alcance = app.Services.CreateScope())
+{
+    var db = alcance.ServiceProvider.GetRequiredService<AppDb>();
+    db.Database.Migrate();
+    DatosIniciales.Sembrar(db, app.Environment.IsDevelopment());
+}
 
 // Configurar el Dashboard de Hangfire en la ruta /hangfire
 app.UseHangfireDashboard("/hangfire");
@@ -60,14 +85,6 @@ RecurringJob.AddOrUpdate<ReminderAgentService>(
     "agente-recordatorios",
     agente => agente.ProcessRemindersAsync(),
     Cron.Hourly);
-
-// Crear base de datos (Migraciones) y sembrar datos
-using (var alcance = app.Services.CreateScope())
-{
-    var db = alcance.ServiceProvider.GetRequiredService<AppDb>();
-    db.Database.Migrate();
-    DatosIniciales.Sembrar(db);
-}
 
 // ===================== Auth =====================
 
@@ -152,6 +169,7 @@ app.MapGet("/api/dashboard", async (AppDb db) =>
         referenciasRecibidas = respondidas.Count,
         referenciasPendientes = referencias.Count - respondidas.Count,
         tiempoPromedioDias = tiempoPromedio,
+        competencias = Calculos.GetCompetenciasGlobales(respondidas),
         candidatos = lista
     });
 });
@@ -184,7 +202,8 @@ app.MapGet("/api/dashboard/reporte/pdf", async (AppDb db, IPdfReportService pdfS
         RiesgoBajo: scoresValidos.Count(s => s.semaforo == "verde"),
         RiesgoMedio: scoresValidos.Count(s => s.semaforo == "amarillo" || s.semaforo == "naranja"),
         RiesgoAlto: scoresValidos.Count(s => s.semaforo == "rojo"),
-        PorcentajeRecontratacion: (int)Math.Round(scoresValidos.Any() ? 100.0 * scoresValidos.Count(s => s.general >= 7) / scoresValidos.Count : 0)
+        PorcentajeRecontratacion: (int)Math.Round(scoresValidos.Any() ? 100.0 * scoresValidos.Count(s => s.general >= 7) / scoresValidos.Count : 0),
+        CompetenciasGlobales: Calculos.GetCompetenciasGlobales(respondidas)
     );
 
     var pdfBytes = pdfService.GenerateGlobalReport(stats);
@@ -244,6 +263,38 @@ app.MapPost("/api/candidatos", async (AppDb db, IEmailService emailService, Nuev
     await db.SaveChangesAsync();
 
     return Results.Created($"/api/candidatos/{candidato.Id}", new { candidato.Id });
+});
+
+app.MapGet("/api/candidatos/importar/plantilla", () =>
+{
+    using var workbook = new ClosedXML.Excel.XLWorkbook();
+    var ws = workbook.Worksheets.Add("Candidatos");
+    
+    var headers = new[] { "Candidato_Nombre", "Candidato_Email", "Candidato_Puesto", "Referencia_Nombre", "Referencia_Empresa", "Referencia_Puesto", "Referencia_Relacion", "Referencia_Email", "Referencia_Telefono" };
+    for (int i = 0; i < headers.Length; i++)
+    {
+        var cell = ws.Cell(1, i + 1);
+        cell.Value = headers[i];
+        cell.Style.Font.Bold = true;
+        cell.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.LightGray;
+    }
+    
+    // Fila de ejemplo
+    ws.Cell(2, 1).Value = "Juan Perez";
+    ws.Cell(2, 2).Value = "juan@example.com";
+    ws.Cell(2, 3).Value = "Desarrollador";
+    ws.Cell(2, 4).Value = "Maria Lopez";
+    ws.Cell(2, 5).Value = "Acme Corp";
+    ws.Cell(2, 6).Value = "Gerente IT";
+    ws.Cell(2, 7).Value = "Jefe directo";
+    ws.Cell(2, 8).Value = "maria@example.com";
+    ws.Cell(2, 9).Value = "555-1234";
+
+    ws.Columns().AdjustToContents();
+    
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    return Results.File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Plantilla_Candidatos.xlsx");
 });
 
 app.MapPost("/api/candidatos/importar", async (AppDb db, IEmailService emailService, IFormFile file) =>

@@ -32,7 +32,7 @@ public class AppDb : DbContext
 
 public static class DatosIniciales
 {
-    public static void Sembrar(AppDb db)
+    public static void Sembrar(AppDb db, bool isDevelopment = false)
     {
         if (!db.Usuarios.Any())
         {
@@ -136,7 +136,7 @@ public static class DatosIniciales
         }
         db.SaveChanges();
 
-        if (db.Candidatos.Count() >= 10) return;
+        if (!isDevelopment || db.Candidatos.Count() >= 10) return;
 
         var rand = new Random();
         var hoy = DateTime.Now;

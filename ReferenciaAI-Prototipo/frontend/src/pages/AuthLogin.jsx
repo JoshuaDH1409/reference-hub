@@ -49,7 +49,7 @@ export default function AuthLogin() {
 
         {/* Footer Branding */}
         <div className="relative z-10 text-sm text-blue-gray/60 font-medium">
-          &copy; {new Date().getFullYear()} Reference Hub.
+          &copy; {new Date().getFullYear()} Referencia AI.
         </div>
       </div>
 
