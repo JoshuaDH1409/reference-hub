@@ -99,6 +99,19 @@ public class CorreoSimulado
     public int? ReferenciaId { get; set; }
 }
 
+public class ConfiguracionAgente
+{
+    public int Id { get; set; }
+    public int Frecuencia { get; set; } = 48; // horas
+    public int MaxIntentos { get; set; } = 3;
+    public bool DiasHabiles { get; set; } = true;
+    public string NombreAgente { get; set; } = "EstrategIA Bot";
+    public string Tono { get; set; } = "formal";
+    public bool ResumenAutomatico { get; set; } = true;
+    public bool DeteccionBanderasRojas { get; set; } = true;
+    public bool AgradecimientoReferente { get; set; } = true;
+}
+
 // ===================== DTOs =====================
 
 public record PreguntaDto(int Id, string Area, string TextoPregunta, string Tipo, bool Activa);
@@ -160,4 +173,15 @@ public record ScoreResult(
     List<object> competencias,
     int recontratarian,
     int totalRespuestas
+);
+
+public record ConfiguracionAgenteDto(
+    int Frecuencia,
+    int MaxIntentos,
+    bool DiasHabiles,
+    string NombreAgente,
+    string Tono,
+    bool ResumenAutomatico,
+    bool DeteccionBanderasRojas,
+    bool AgradecimientoReferente
 );

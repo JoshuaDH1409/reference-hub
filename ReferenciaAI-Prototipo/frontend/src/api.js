@@ -87,6 +87,35 @@ export const api = {
     ),
 
   correos: () => conDemo('/correos', () => pedir('/correos'), () => demoCorreos()),
+
+  obtenerConfigAgente: () => 
+    conDemo(
+      '/agente/config',
+      () => pedir('/agente/config'),
+      () => ({
+        frecuencia: 48,
+        maxIntentos: 3,
+        diasHabiles: true,
+        nombreAgente: 'EstrategIA Bot',
+        tono: 'formal',
+        resumenAutomatico: true,
+        deteccionBanderasRojas: true,
+        agradecimientoReferente: true,
+        demo: true
+      })
+    ),
+
+  guardarConfigAgente: (config) =>
+    conDemo(
+      '/agente/config',
+      () =>
+        pedir('/agente/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config),
+        }),
+      () => ({ ok: true, demo: true })
+    ),
 }
 
 export function formatoFecha(iso) {

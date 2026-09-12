@@ -1,10 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../api';
 
 export default function Agente() {
   const [tabActiva, setTabActiva] = useState('recordatorios');
+  const [cargando, setCargando] = useState(true);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+
+  // Estados de configuración
   const [frecuencia, setFrecuencia] = useState(48); // hours
   const [maxIntentos, setMaxIntentos] = useState(3);
+  const [diasHabiles, setDiasHabiles] = useState(true);
+  const [nombreAgente, setNombreAgente] = useState('EstrategIA Bot');
   const [tono, setTono] = useState('formal');
+  const [resumenAutomatico, setResumenAutomatico] = useState(true);
+  const [deteccionBanderasRojas, setDeteccionBanderasRojas] = useState(true);
+  const [agradecimientoReferente, setAgradecimientoReferente] = useState(true);
+
+  useEffect(() => {
+    api.obtenerConfigAgente().then(data => {
+      setFrecuencia(data.frecuencia);
+      setMaxIntentos(data.maxIntentos);
+      setDiasHabiles(data.diasHabiles);
+      setNombreAgente(data.nombreAgente);
+      setTono(data.tono);
+      setResumenAutomatico(data.resumenAutomatico);
+      setDeteccionBanderasRojas(data.deteccionBanderasRojas);
+      setAgradecimientoReferente(data.agradecimientoReferente);
+      setCargando(false);
+    }).catch(err => {
+      console.error(err);
+      setCargando(false);
+    });
+  }, []);
+
+  const handleGuardar = async () => {
+    setGuardando(true);
+    setMensaje('');
+    try {
+      await api.guardarConfigAgente({
+        frecuencia: Number(frecuencia),
+        maxIntentos: Number(maxIntentos),
+        diasHabiles,
+        nombreAgente,
+        tono,
+        resumenAutomatico,
+        deteccionBanderasRojas,
+        agradecimientoReferente
+      });
+      setMensaje('Configuración guardada correctamente.');
+      setTimeout(() => setMensaje(''), 3000);
+    } catch (error) {
+      setMensaje('Error al guardar: ' + error.message);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  if (cargando) return <div className="p-8 text-center">Cargando configuración...</div>;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -18,12 +71,22 @@ export default function Agente() {
             Configura y supervisa cómo el agente interactúa con tus candidatos y referentes en segundo plano.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-          </span>
-          <span className="text-sm font-bold text-green-600">Agente Activo</span>
+        <div className="flex items-center gap-4">
+          {mensaje && <span className="text-sm font-bold text-green-600">{mensaje}</span>}
+          <button 
+            onClick={handleGuardar}
+            disabled={guardando}
+            className="bg-accent-orange text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-orange-600 disabled:opacity-50"
+          >
+            {guardando ? 'Guardando...' : 'Guardar Configuración'}
+          </button>
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-blue-gray-20">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-sm font-bold text-green-600">Activo</span>
+          </div>
         </div>
       </div>
 
@@ -129,7 +192,12 @@ export default function Agente() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-blue-gray">Enviar solo de Lun - Vie</span>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" className="sr-only peer" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={diasHabiles}
+                        onChange={(e) => setDiasHabiles(e.target.checked)}
+                      />
                       <div className="w-11 h-6 bg-blue-gray-40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-orange"></div>
                     </label>
                   </div>
@@ -149,7 +217,8 @@ export default function Agente() {
                   <label className="block text-sm font-bold text-charcoal mb-2">Nombre del Agente</label>
                   <input 
                     type="text" 
-                    defaultValue="EstrategIA Bot"
+                    value={nombreAgente}
+                    onChange={(e) => setNombreAgente(e.target.value)}
                     className="w-full bg-white border border-blue-gray-40 text-charcoal text-sm rounded-lg focus:ring-accent-orange focus:border-accent-orange block p-3"
                     placeholder="Ej. Asistente de Reclutamiento"
                   />
@@ -199,7 +268,12 @@ export default function Agente() {
                     <div className="text-sm text-blue-gray mt-1">Generar un resumen ejecutivo destacando fortalezas y debilidades cuando se completen todas las referencias.</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={resumenAutomatico}
+                      onChange={(e) => setResumenAutomatico(e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-blue-gray-40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-orange"></div>
                   </label>
                 </div>
@@ -213,7 +287,12 @@ export default function Agente() {
                     <div className="text-sm text-blue-gray mt-1">Notificar inmediatamente al reclutador si el análisis semántico detecta comentarios altamente negativos.</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={deteccionBanderasRojas}
+                      onChange={(e) => setDeteccionBanderasRojas(e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-blue-gray-40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-orange"></div>
                   </label>
                 </div>
@@ -224,7 +303,12 @@ export default function Agente() {
                     <div className="text-sm text-blue-gray mt-1">Enviar un correo de agradecimiento redactado por la IA una vez que envíen el formulario.</div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={agradecimientoReferente}
+                      onChange={(e) => setAgradecimientoReferente(e.target.checked)}
+                    />
                     <div className="w-11 h-6 bg-blue-gray-40 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-orange"></div>
                   </label>
                 </div>

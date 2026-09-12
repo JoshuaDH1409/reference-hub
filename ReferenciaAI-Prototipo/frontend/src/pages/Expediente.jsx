@@ -81,6 +81,16 @@ export default function Expediente() {
     }
   };
 
+  const handleRecordar = async (refId) => {
+    try {
+      await api.enviarRecordatorio(refId);
+      alert('Recordatorio enviado exitosamente.');
+      cargar(); // Recargar datos
+    } catch (err) {
+      alert(err.message || 'Error al enviar recordatorio.');
+    }
+  };
+
   return (
     <div className="theme-content p-0 lg:p-8">
       {/* Hero Banner en branding Navy */}
@@ -282,7 +292,10 @@ export default function Expediente() {
                       </td>
                       <td className="py-4 px-2 text-right">
                         {r.estatus !== 'Respondida' ? (
-                          <button className="text-[var(--accent-orange)] text-xs font-bold bg-white border border-[var(--border)] px-3 py-1.5 rounded-lg hover:border-[var(--accent-orange)] transition-colors inline-flex items-center gap-1">
+                          <button 
+                            onClick={() => handleRecordar(r.id)}
+                            className="text-[var(--accent-orange)] text-xs font-bold bg-white border border-[var(--border)] px-3 py-1.5 rounded-lg hover:border-[var(--accent-orange)] transition-colors inline-flex items-center gap-1"
+                          >
                             <span className="material-symbols-outlined text-[14px]">notifications</span>
                             Recordar
                           </button>

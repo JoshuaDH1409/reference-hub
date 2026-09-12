@@ -121,11 +121,9 @@ public static class Calculos
 
 public static class Notificaciones
 {
-    public const string UrlBaseFrontend = "http://localhost:5173";
-
-    public static CorreoSimulado CorreoInvitacion(Candidato c, Referencia r)
+    public static CorreoSimulado CorreoInvitacion(Candidato c, Referencia r, string baseUrlFrontend = "http://localhost:5173")
     {
-        var enlace = $"{UrlBaseFrontend}/responder/{r.Token}";
+        var enlace = $"{baseUrlFrontend}/responder/{r.Token}";
         return new CorreoSimulado
         {
             Para = r.Email,
@@ -145,9 +143,9 @@ public static class Notificaciones
         };
     }
 
-    public static CorreoSimulado CorreoRecordatorio(Candidato c, Referencia r, int intento = 1)
+    public static CorreoSimulado CorreoRecordatorio(Candidato c, Referencia r, int intento = 1, string baseUrlFrontend = "http://localhost:5173")
     {
-        var enlace = $"{UrlBaseFrontend}/responder/{r.Token}";
+        var enlace = $"{baseUrlFrontend}/responder/{r.Token}";
         
         string asunto, parrafo1, parrafo2, colorCabecera;
         

@@ -13,6 +13,7 @@ public class AppDb : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<ReporteDashboard> ReportesDashboard => Set<ReporteDashboard>();
     public DbSet<Pregunta> Preguntas => Set<Pregunta>();
+    public DbSet<ConfiguracionAgente> ConfiguracionAgente => Set<ConfiguracionAgente>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -42,6 +43,12 @@ public static class DatosIniciales
                 Email = "admin@ejemplo.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!")
             });
+            db.SaveChanges();
+        }
+
+        if (!db.ConfiguracionAgente.Any())
+        {
+            db.ConfiguracionAgente.Add(new ConfiguracionAgente());
             db.SaveChanges();
         }
 

@@ -212,8 +212,9 @@ app.MapGet("/api/dashboard/reporte/pdf", async (AppDb db, IPdfReportService pdfS
 
 // ===================== Candidatos =====================
 
-app.MapPost("/api/candidatos", async (AppDb db, IEmailService emailService, NuevoCandidatoDto dto) =>
+app.MapPost("/api/candidatos", async (AppDb db, IEmailService emailService, IConfiguration config, NuevoCandidatoDto dto) =>
 {
+    var baseUrl = config["FRONTEND_URL"] ?? "http://localhost:5173";
     if (string.IsNullOrWhiteSpace(dto.Nombre))
         return Results.BadRequest(new { error = "El nombre del candidato es obligatorio." });
     if (dto.Referencias is null || dto.Referencias.Count == 0)
@@ -249,7 +250,7 @@ app.MapPost("/api/candidatos", async (AppDb db, IEmailService emailService, Nuev
     });
     foreach (var r in candidato.Referencias)
     {
-        var correo = Notificaciones.CorreoInvitacion(candidato, r);
+        var correo = Notificaciones.CorreoInvitacion(candidato, r, baseUrl);
         db.Correos.Add(correo);
         try { await emailService.EnviarCorreoAsync(correo); } catch { /* Ignore email sending errors for prototype */ }
 
@@ -297,8 +298,9 @@ app.MapGet("/api/candidatos/importar/plantilla", () =>
     return Results.File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Plantilla_Candidatos.xlsx");
 });
 
-app.MapPost("/api/candidatos/importar", async (AppDb db, IEmailService emailService, IFormFile file) =>
+app.MapPost("/api/candidatos/importar", async (AppDb db, IEmailService emailService, IConfiguration config, IFormFile file) =>
 {
+    var baseUrl = config["FRONTEND_URL"] ?? "http://localhost:5173";
     if (file == null || file.Length == 0)
         return Results.BadRequest(new { error = "No se subió ningún archivo." });
 
@@ -370,7 +372,7 @@ app.MapPost("/api/candidatos/importar", async (AppDb db, IEmailService emailServ
 
             foreach (var r in c.Referencias)
             {
-                var correo = Notificaciones.CorreoInvitacion(c, r);
+                var correo = Notificaciones.CorreoInvitacion(c, r, baseUrl);
                 db.Correos.Add(correo);
                 try { await emailService.EnviarCorreoAsync(correo); } catch { }
 
@@ -447,8 +449,9 @@ app.MapGet("/api/candidatos/{id:int}/reporte/pdf", async (AppDb db, IPdfReportSe
 
 // ===================== Recordatorios =====================
 
-app.MapPost("/api/referencias/{id:int}/recordatorio", async (AppDb db, IEmailService emailService, int id) =>
+app.MapPost("/api/referencias/{id:int}/recordatorio", async (AppDb db, IEmailService emailService, IConfiguration config, int id) =>
 {
+    var baseUrl = config["FRONTEND_URL"] ?? "http://localhost:5173";
     var r = await db.Referencias.FindAsync(id);
     if (r is null) return Results.NotFound();
     if (r.Estatus == "Respondida")
@@ -458,7 +461,7 @@ app.MapPost("/api/referencias/{id:int}/recordatorio", async (AppDb db, IEmailSer
     if (c is null) return Results.NotFound();
 
     r.Recordatorios++;
-    var correo = Notificaciones.CorreoRecordatorio(c, r);
+    var correo = Notificaciones.CorreoRecordatorio(c, r, r.Recordatorios, baseUrl);
     db.Correos.Add(correo);
     try { await emailService.EnviarCorreoAsync(correo); } catch { /* Ignore error */ }
 
@@ -597,5 +600,46 @@ app.MapPut("/api/v1/preguntas/{id:int}/toggle", async (AppDb db, int id) =>
 
 app.MapGet("/api/correos", async (AppDb db) =>
     Results.Ok(await db.Correos.OrderByDescending(c => c.Fecha).ToListAsync()));
+
+// ===================== Agente IA =====================
+
+app.MapGet("/api/agente/config", async (AppDb db) =>
+{
+    var config = await db.ConfiguracionAgente.FirstOrDefaultAsync();
+    if (config == null) return Results.NotFound();
+    
+    return Results.Ok(new ConfiguracionAgenteDto(
+        config.Frecuencia,
+        config.MaxIntentos,
+        config.DiasHabiles,
+        config.NombreAgente,
+        config.Tono,
+        config.ResumenAutomatico,
+        config.DeteccionBanderasRojas,
+        config.AgradecimientoReferente
+    ));
+});
+
+app.MapPost("/api/agente/config", async (AppDb db, ConfiguracionAgenteDto dto) =>
+{
+    var config = await db.ConfiguracionAgente.FirstOrDefaultAsync();
+    if (config == null)
+    {
+        config = new ConfiguracionAgente();
+        db.ConfiguracionAgente.Add(config);
+    }
+    
+    config.Frecuencia = dto.Frecuencia;
+    config.MaxIntentos = dto.MaxIntentos;
+    config.DiasHabiles = dto.DiasHabiles;
+    config.NombreAgente = dto.NombreAgente;
+    config.Tono = dto.Tono;
+    config.ResumenAutomatico = dto.ResumenAutomatico;
+    config.DeteccionBanderasRojas = dto.DeteccionBanderasRojas;
+    config.AgradecimientoReferente = dto.AgradecimientoReferente;
+    
+    await db.SaveChangesAsync();
+    return Results.Ok(new { mensaje = "Configuración del agente guardada correctamente." });
+});
 
 app.Run();
